@@ -1,0 +1,50 @@
+#!/usr/bin/env python
+import json
+
+from pycoingecko import CoinGeckoAPI
+from web3.auto.infura import w3 as web3
+
+LIQUIDITY_POOLS = (
+    "0xd3d2E2692501A5c9Ca623199D38826e513033a17",
+    "0x3B3d4EeFDc603b232907a7f3d0Ed1Eea5C62b5f7",
+)
+
+
+def get_token_price(address):
+    cg = CoinGeckoAPI()
+    response = cg.get_token_price(
+        "ethereum",
+        address,
+        "usd",
+        include_market_cap="true",
+        include_24hr_vol="true",
+        include_last_updated_at="true",
+    )
+    return response
+
+
+def list_pools(address):
+    balance_wei = web3.eth.getBalance(address)
+    balance = web3.fromWei(balance_wei, "ether")
+    print("balance:", balance)
+    with open("abi.json") as f:
+        abi = json.loads(f.read())
+    for contract_address in LIQUIDITY_POOLS:
+        contract = web3.eth.contract(contract_address, abi=abi)
+        print("contract.address:", contract.address)
+        print("name:", contract.functions.name().call())
+        print("symbol:", contract.functions.symbol().call())
+        balance_wei = contract.functions.balanceOf(address).call()
+        balance = web3.fromWei(balance_wei, "ether")
+        print("balance:", balance)
+        price = get_token_price(contract_address)
+        print("price:", price)
+
+
+def main():
+    address = "0x742d35Cc6634C0532925a3b844Bc454e4438f44e"
+    list_pools(address)
+
+
+if __name__ == "__main__":
+    main()
