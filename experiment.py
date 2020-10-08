@@ -20,6 +20,7 @@ def get_pair_info(contract_address):
         url="https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2"
     )
     client = Client(transport=transport, fetch_schema_from_transport=True)
+    # TODO: add totalSupply in order to know the share
     query = gql(
         """
         query getPairInfo($id: ID!) {
@@ -50,7 +51,7 @@ def get_pair_info(contract_address):
     )
     variable_values = {"id": contract_address}
     result = client.execute(query, variable_values=variable_values)
-    pprint(result)
+    return result
 
 
 def get_token_price(address):
@@ -78,11 +79,23 @@ def list_pools(address):
         print("name:", contract.functions.name().call())
         print("symbol:", contract.functions.symbol().call())
         balance_wei = contract.functions.balanceOf(address).call()
+        print("balance_wei:", balance_wei)
         balance = web3.fromWei(balance_wei, "ether")
         print("balance:", balance)
         # price = get_token_price(contract_address)
         # print("price:", price)
-        get_pair_info(contract_address)
+        pair_info = get_pair_info(contract_address)
+        pair = pair_info["pair"]
+        token0 = pair["token0"]
+        token1 = pair["token1"]
+        token0_symbol = token0["symbol"]
+        token1_symbol = token1["symbol"]
+        pair_symbol = f"{token0_symbol}-{token1_symbol}"
+        print("pair_symbol:", pair_symbol)
+        total_supply = pair["totalSupply"]
+        print("total_supply:", total_supply)
+        share = round(100 * (balance / total_supply), 2)
+        print(f"share: {share}%")
 
 
 def main():
