@@ -1,13 +1,56 @@
 #!/usr/bin/env python
 import json
+from pprint import pprint
 
+from gql import AIOHTTPTransport, Client, gql
+from gql.transport.requests import RequestsHTTPTransport
 from pycoingecko import CoinGeckoAPI
 from web3.auto.infura import w3 as web3
 
 LIQUIDITY_POOLS = (
     "0xd3d2E2692501A5c9Ca623199D38826e513033a17",
     "0x3B3d4EeFDc603b232907a7f3d0Ed1Eea5C62b5f7",
+    "0xd3d2E2692501A5c9Ca623199D38826e513033a17",
 )
+
+
+def get_pair_info(contract_address):
+    # transport = AIOHTTPTransport(url="https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2")
+    transport = RequestsHTTPTransport(
+        url="https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2"
+    )
+    client = Client(transport=transport, fetch_schema_from_transport=True)
+    query = gql(
+        """
+        query getPairInfo($id: ID!) {
+          pair(id: $id) {
+            token0 {
+              id
+              symbol
+              name
+              derivedETH
+            }
+            token1 {
+              id
+              symbol
+              name
+              derivedETH
+            }
+            reserve0
+            reserve1
+            reserveUSD
+            trackedReserveETH
+            token0Price
+            token1Price
+            volumeUSD
+            txCount
+          }
+        }
+    """
+    )
+    variable_values = {"id": contract_address}
+    result = client.execute(query, variable_values=variable_values)
+    pprint(result)
 
 
 def get_token_price(address):
@@ -37,8 +80,9 @@ def list_pools(address):
         balance_wei = contract.functions.balanceOf(address).call()
         balance = web3.fromWei(balance_wei, "ether")
         print("balance:", balance)
-        price = get_token_price(contract_address)
-        print("price:", price)
+        # price = get_token_price(contract_address)
+        # print("price:", price)
+        get_pair_info(contract_address)
 
 
 def main():
