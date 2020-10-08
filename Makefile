@@ -12,7 +12,10 @@ PYTHON_MINOR_VERSION=8
 PYTHON_VERSION=$(PYTHON_MAJOR_VERSION).$(PYTHON_MINOR_VERSION)
 PYTHON_MAJOR_MINOR=$(PYTHON_MAJOR_VERSION)$(PYTHON_MINOR_VERSION)
 PYTHON_WITH_VERSION=python$(PYTHON_VERSION)
-SOURCES=experiment.py
+SOURCES=experiment.py main.py
+DOCKER_IMAGE=andremiras/uniswap-roi
+DOCKER_COMMAND ?= /bin/bash
+DOCKER_PORT=8000
 
 
 $(VIRTUAL_ENV):
@@ -20,8 +23,6 @@ $(VIRTUAL_ENV):
 	$(PIP) install -r requirements.txt
 
 virtualenv: $(VIRTUAL_ENV)
-
-venv: $(VIRTUAL_ENV)
 
 test:
 	$(TOX)
@@ -51,3 +52,14 @@ clean: release/clean docs/clean
 
 clean/all: clean
 	rm -rf $(VIRTUAL_ENV) .tox/
+
+docker/build:
+	docker build --tag=$(DOCKER_IMAGE) .
+
+docker/shell:
+	docker run --rm -it \
+		--env PORT=$(DOCKER_PORT) --publish $(DOCKER_PORT):$(DOCKER_PORT) $(DOCKER_IMAGE) $(DOCKER_COMMAND)
+
+docker/run:
+	docker run --rm -it \
+		--env PORT=$(DOCKER_PORT) --publish $(DOCKER_PORT):$(DOCKER_PORT) $(DOCKER_IMAGE)
