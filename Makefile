@@ -62,8 +62,12 @@ docker/build:
 
 docker/shell:
 	docker run --rm -it \
-		--env PORT=$(DOCKER_PORT) --publish $(DOCKER_PORT):$(DOCKER_PORT) $(DOCKER_IMAGE) $(DOCKER_COMMAND)
+		--env PORT=$(DOCKER_PORT) \
+		--env WEB3_INFURA_PROJECT_ID \
+		--publish $(DOCKER_PORT):$(DOCKER_PORT) $(DOCKER_IMAGE) $(DOCKER_COMMAND)
 
 docker/run:
 	docker run --rm -it \
-		--env PORT=$(DOCKER_PORT) --publish $(DOCKER_PORT):$(DOCKER_PORT) $(DOCKER_IMAGE)
+		--env PORT=$(DOCKER_PORT) \
+		--env WEB3_INFURA_PROJECT_ID \
+		--publish $(DOCKER_PORT):$(DOCKER_PORT) $(DOCKER_IMAGE)
