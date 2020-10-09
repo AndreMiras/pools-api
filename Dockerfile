@@ -2,12 +2,17 @@
 # Build with:
 # docker build --tag=andremiras/uniswap-roi .
 # Run with:
-# docker run andremiras/uniswap-roi /bin/sh -c 'echo TODO'
+# docker run -it --rm --env PORT=8000 --publish 8000:8000 andremiras/uniswap-roi
 # Or for interactive shell:
-# docker run -it --rm andremiras/uniswap-roi
-FROM python:3.8
+# docker run -it --rm andremiras/uniswap-roi bash
+FROM python:3.8-slim
 
 WORKDIR /app
+
+RUN apt update -qq > /dev/null && apt --yes install --no-install-recommends \
+    build-essential \
+    make \
+    && apt --yes autoremove && apt --yes clean
 COPY requirements.txt Makefile ./
 RUN make venv
 COPY . /app
