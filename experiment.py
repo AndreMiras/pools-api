@@ -52,13 +52,17 @@ def ttl_cached(maxsize=1000, ttl=5 * 60):
     return cached(cache=TTLCache(maxsize=maxsize, ttl=ttl))
 
 
-@ttl_cached()
-def get_pair_info(contract_address):
+def get_qgl_client():
     # transport = AIOHTTPTransport(url="https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2")
     transport = RequestsHTTPTransport(
         url="https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2"
     )
-    client = Client(transport=transport, fetch_schema_from_transport=True)
+    return Client(transport=transport, fetch_schema_from_transport=True)
+
+
+@ttl_cached()
+def get_pair_info(contract_address):
+    client = get_qgl_client()
     query = gql(
         "query getPairInfo($id: ID!) {"
         "pair(id: $id) {" + GQL_PAIR_PARAMETERS + "}}"
@@ -72,10 +76,7 @@ def get_pair_info(contract_address):
 
 @ttl_cached()
 def get_liquidity_positions(address):
-    transport = RequestsHTTPTransport(
-        url="https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2"
-    )
-    client = Client(transport=transport, fetch_schema_from_transport=True)
+    client = get_qgl_client()
     query = gql(
         """
         query getLiquidityPositions($id: ID!) {
