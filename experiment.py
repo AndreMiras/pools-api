@@ -22,6 +22,32 @@ STAKING_POOLS = {
 }
 
 
+GQL_PAIR_PARAMETERS = """
+id
+token0 {
+  id
+  symbol
+  name
+  derivedETH
+}
+token1 {
+  id
+  symbol
+  name
+  derivedETH
+}
+reserve0
+reserve1
+reserveUSD
+trackedReserveETH
+totalSupply
+token0Price
+token1Price
+volumeUSD
+txCount
+"""
+
+
 def ttl_cached(maxsize=1000, ttl=5 * 60):
     return cached(cache=TTLCache(maxsize=maxsize, ttl=ttl))
 
@@ -34,34 +60,8 @@ def get_pair_info(contract_address):
     )
     client = Client(transport=transport, fetch_schema_from_transport=True)
     query = gql(
-        """
-        query getPairInfo($id: ID!) {
-          pair(id: $id) {
-            id
-            token0 {
-              id
-              symbol
-              name
-              derivedETH
-            }
-            token1 {
-              id
-              symbol
-              name
-              derivedETH
-            }
-            reserve0
-            reserve1
-            reserveUSD
-            trackedReserveETH
-            totalSupply
-            token0Price
-            token1Price
-            volumeUSD
-            txCount
-          }
-        }
-    """
+        "query getPairInfo($id: ID!) {"
+        "pair(id: $id) {" + GQL_PAIR_PARAMETERS + "}}"
     )
     # note The Graph doesn't seem to like it in checksum format
     contract_address = contract_address.lower()
@@ -83,28 +83,9 @@ def get_liquidity_positions(address):
             liquidityPositions (where: {liquidityTokenBalance_not: "0"}) {
               liquidityTokenBalance
               pair {
-                id
-                token0 {
-                  id
-                  symbol
-                  name
-                  derivedETH
-                }
-                token1 {
-                  id
-                  symbol
-                  name
-                  derivedETH
-                }
-                reserve0
-                reserve1
-                reserveUSD
-                trackedReserveETH
-                totalSupply
-                token0Price
-                token1Price
-                volumeUSD
-                txCount
+              """
+        + GQL_PAIR_PARAMETERS
+        + """
               }
             }
           }
@@ -128,14 +109,8 @@ def get_staking_positions(address):
     positions = []
     for staking_contract, lp_contract in STAKING_POOLS.items():
         contract = web3.eth.contract(staking_contract, abi=abi)
-        # print("contract.address:", contract.address)
-        # print("name:", contract.functions.name().call())
-        # print("symbol:", contract.functions.symbol().call())
         balance = contract.functions.balanceOf(address).call()
         if balance > 0:
-            # print("balance:", balance)
-            # price = get_token_price(contract_address)
-            # print("price:", price)
             pair_info = get_pair_info(lp_contract)
             # this is the only missing key compared with the
             # `get_liquidity_positions()` call
@@ -190,9 +165,6 @@ def extract_pair_info(pair, balance):
 
 @ttl_cached()
 def portfolio(address):
-    # balance_wei = web3.eth.getBalance(address)
-    # balance = web3.fromWei(balance_wei, "ether")
-    # print("balance:", balance)
     # TODO: check if the GraphQL queries can be merged into one
     positions = []
     positions += get_liquidity_positions(address)
