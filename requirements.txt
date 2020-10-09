@@ -2,3 +2,4 @@ fastapi==0.61.1
 uvicorn==0.12.1
 gql==3.0.0a2
 web3==5.11.1
+cachetools==4.1.1

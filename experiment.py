@@ -3,7 +3,9 @@ import argparse
 import json
 import sys
 from decimal import Decimal
+from pprint import pprint
 
+from cachetools import TTLCache, cached
 from gql import AIOHTTPTransport, Client, gql
 from gql.transport.requests import RequestsHTTPTransport
 from web3.auto.infura import w3 as web3
@@ -20,6 +22,11 @@ STAKING_POOLS = {
 }
 
 
+def ttl_cached(maxsize=1000, ttl=5 * 60):
+    return cached(cache=TTLCache(maxsize=maxsize, ttl=ttl))
+
+
+@ttl_cached()
 def get_pair_info(contract_address):
     # transport = AIOHTTPTransport(url="https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2")
     transport = RequestsHTTPTransport(
@@ -63,6 +70,7 @@ def get_pair_info(contract_address):
     return result
 
 
+@ttl_cached()
 def get_liquidity_positions(address):
     transport = RequestsHTTPTransport(
         url="https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2"
@@ -111,6 +119,7 @@ def get_liquidity_positions(address):
     return result
 
 
+@ttl_cached()
 def get_staking_positions(address):
     """Given an address, returns all the staking positions."""
     # abi is the same for all contracts
@@ -179,6 +188,7 @@ def extract_pair_info(pair, balance):
     return pair_info
 
 
+@ttl_cached()
 def portfolio(address):
     # balance_wei = web3.eth.getBalance(address)
     # balance = web3.fromWei(balance_wei, "ether")
@@ -207,7 +217,8 @@ def main():
     parser.add_argument("address", help="Address")
     args = parser.parse_args()
     address = args.address
-    portfolio(address)
+    data = portfolio(address)
+    pprint(data)
 
 
 if __name__ == "__main__":
