@@ -7,6 +7,7 @@ FLAKE8=$(VIRTUAL_ENV)/bin/flake8
 BLACK=$(VIRTUAL_ENV)/bin/black
 PYTEST=$(VIRTUAL_ENV)/bin/pytest
 TWINE=$(VIRTUAL_ENV)/bin/twine
+UVICORN=$(VIRTUAL_ENV)/bin/uvicorn
 PYTHON_MAJOR_VERSION=3
 PYTHON_MINOR_VERSION=8
 PYTHON_VERSION=$(PYTHON_MAJOR_VERSION).$(PYTHON_MINOR_VERSION)
@@ -52,6 +53,9 @@ clean: release/clean docs/clean
 
 clean/all: clean
 	rm -rf $(VIRTUAL_ENV) .tox/
+
+run/uvicorn: $(VIRTUAL_ENV)
+	$(UVICORN) main:app --reload
 
 docker/build:
 	docker build --tag=$(DOCKER_IMAGE) .

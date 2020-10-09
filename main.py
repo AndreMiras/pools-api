@@ -3,6 +3,8 @@ from typing import Optional
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 
+import experiment
+
 app = FastAPI()
 
 
@@ -11,6 +13,7 @@ def read_root():
     return RedirectResponse(app.redoc_url)
 
 
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Optional[str] = None):
-    return {"item_id": item_id, "q": q}
+@app.get("/portfolio/{address}")
+def portfolio(address: str):
+    data = experiment.portfolio(address)
+    return data
