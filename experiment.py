@@ -1,14 +1,17 @@
 #!/usr/bin/env python
+import argparse
 import json
+import sys
+from decimal import Decimal
 
 from gql import AIOHTTPTransport, Client, gql
 from gql.transport.requests import RequestsHTTPTransport
 from web3.auto.infura import w3 as web3
 
 LIQUIDITY_POOLS = (
-    "0xd3d2E2692501A5c9Ca623199D38826e513033a17",
-    "0x3B3d4EeFDc603b232907a7f3d0Ed1Eea5C62b5f7",
-    "0xd3d2E2692501A5c9Ca623199D38826e513033a17",
+    "0x3B3d4EeFDc603b232907a7f3d0Ed1Eea5C62b5f7",  # STAKE-ETH
+    "0xA478c2975Ab1Ea89e8196811F51A7B7Ade33eB11",  # DAI-ETH
+    "0xd3d2E2692501A5c9Ca623199D38826e513033a17",  # UNI-ETH
 )
 
 
@@ -18,12 +21,6 @@ def get_pair_info(contract_address):
         url="https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2"
     )
     client = Client(transport=transport, fetch_schema_from_transport=True)
-    # TODO: add totalSupply in order to know the share
-    # e.g. UNI-ETH
-    # 0xd3d2E2692501A5c9Ca623199D38826e513033a17
-    # totalSupply: 367292
-    # balance: 123.321
-    # share: 123.321/367292
     query = gql(
         """
         query getPairInfo($id: ID!) {
@@ -44,6 +41,7 @@ def get_pair_info(contract_address):
             reserve1
             reserveUSD
             trackedReserveETH
+            totalSupply
             token0Price
             token1Price
             volumeUSD
@@ -52,6 +50,8 @@ def get_pair_info(contract_address):
         }
     """
     )
+    # note The Graph doesn't seem to like it in checksum format
+    contract_address = contract_address.lower()
     variable_values = {"id": contract_address}
     result = client.execute(query, variable_values=variable_values)
     return result
@@ -59,6 +59,7 @@ def get_pair_info(contract_address):
 
 def get_token_price(address):
     from pycoingecko import CoinGeckoAPI
+
     cg = CoinGeckoAPI()
     response = cg.get_token_price(
         "ethereum",
@@ -101,12 +102,10 @@ def portfolio(address):
             token1_symbol = token1["symbol"]
             pair_symbol = f"{token0_symbol}-{token1_symbol}"
             print("pair_symbol:", pair_symbol)
-            # TODO
-            # total_supply = pair["totalSupply"]
-            total_supply = 367292
+            total_supply = Decimal(pair["totalSupply"])
             print("total_supply:", total_supply)
             share = 100 * (balance / total_supply)
-            print(f"share: {share}%")
+            print("share: {0:0.2f}".format(share))
         pair_info = {
             "address": contract_address,
             "owner_balance": balance_wei,
@@ -123,7 +122,12 @@ def portfolio(address):
 
 
 def main():
-    address = "0x742d35Cc6634C0532925a3b844Bc454e4438f44e"
+    parser = argparse.ArgumentParser(
+        description="Liquidity provider portfolio stats."
+    )
+    parser.add_argument("address", help="Address")
+    args = parser.parse_args()
+    address = args.address
     portfolio(address)
 
 
