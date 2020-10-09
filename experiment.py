@@ -118,14 +118,13 @@ def get_token_price(address):
     return response
 
 
-# TODO: don't think we would need
-def get_pair_info(pair):
-    pair_info = get_pair_info(contract_address)
-    pair = pair_info["pair"]
+def get_pair_info(pair, balance):
+    """Builds a dictionary with pair information."""
     pair_symbol = None
     total_supply = None
     share = None
     if pair:
+        contract_address = pair["id"]
         token0 = pair["token0"]
         token1 = pair["token1"]
         token0_symbol = token0["symbol"]
@@ -135,14 +134,15 @@ def get_pair_info(pair):
         total_supply = Decimal(pair["totalSupply"])
         print("total_supply:", total_supply)
         share = 100 * (balance / total_supply)
-        print("share: {0:0.2f}".format(share))
+        print("share: {0:0.4f}".format(share))
     pair_info = {
-        "address": contract_address,
-        "owner_balance": balance_wei,
+        "contract_address": contract_address,
+        "owner_balance": balance,
         "pair_symbol": pair_symbol,
         "total_supply": total_supply,
         "share": share,
     }
+    return pair_info
 
 
 def portfolio(address):
@@ -170,28 +170,7 @@ def portfolio(address):
     for position in positions:
         balance = Decimal(position["liquidityTokenBalance"])
         pair = position["pair"]
-        pair_symbol = None
-        total_supply = None
-        share = None
-        if pair:
-            contract_address = pair["id"]
-            token0 = pair["token0"]
-            token1 = pair["token1"]
-            token0_symbol = token0["symbol"]
-            token1_symbol = token1["symbol"]
-            pair_symbol = f"{token0_symbol}-{token1_symbol}"
-            print("pair_symbol:", pair_symbol)
-            total_supply = Decimal(pair["totalSupply"])
-            print("total_supply:", total_supply)
-            share = 100 * (balance / total_supply)
-            print("share: {0:0.4f}".format(share))
-        pair_info = {
-            "contract_address": contract_address,
-            "owner_balance": balance,
-            "pair_symbol": pair_symbol,
-            "total_supply": total_supply,
-            "share": share,
-        }
+        pair_info = get_pair_info(pair, balance)
         pairs.append(pair_info)
     data = {
         "address": address,
