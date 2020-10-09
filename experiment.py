@@ -9,7 +9,15 @@ from gql.transport.requests import RequestsHTTPTransport
 from web3.auto.infura import w3 as web3
 
 # pool tokens that can be staked
-STAKING_POOLS = ("0xA478c2975Ab1Ea89e8196811F51A7B7Ade33eB11",)  # DAI-ETH
+# staking contract -> pool token
+STAKING_POOLS = {
+    # DAI-ETH
+    "0xa1484C3aa22a66C62b77E0AE78E15258bd0cB711": "0xA478c2975Ab1Ea89e8196811F51A7B7Ade33eB11",
+    # TODO: USDC-ETH
+    # TODO: USDT-ETH
+    # WBTC-ETH
+    "0xBb2b8038a1640196FbE3e38816F3e67Cba72D940": "0xCA35e32e7926b96A9988f61d510E038108d8068e",
+}
 
 
 def get_pair_info(contract_address):
@@ -103,6 +111,31 @@ def get_liquidity_positions(address):
     return result
 
 
+def get_staking_positions(address):
+    """Given an address, returns all the staking positions."""
+    # abi is the same for all contracts
+    with open("abi.json") as f:
+        abi = json.loads(f.read())
+    positions = []
+    for staking_contract, lp_contract in STAKING_POOLS.items():
+        contract = web3.eth.contract(staking_contract, abi=abi)
+        # print("contract.address:", contract.address)
+        # print("name:", contract.functions.name().call())
+        # print("symbol:", contract.functions.symbol().call())
+        balance = contract.functions.balanceOf(address).call()
+        if balance > 0:
+            # print("balance:", balance)
+            # price = get_token_price(contract_address)
+            # print("price:", price)
+            pair_info = get_pair_info(lp_contract)
+            # this is the only missing key compared with the
+            # `get_liquidity_positions()` call
+            balance = web3.fromWei(balance, "ether")
+            pair_info["liquidityTokenBalance"] = balance
+            positions.append(pair_info)
+    return positions
+
+
 def get_token_price(address):
     from pycoingecko import CoinGeckoAPI
 
@@ -118,8 +151,9 @@ def get_token_price(address):
     return response
 
 
-def get_pair_info(pair, balance):
+def extract_pair_info(pair, balance):
     """Builds a dictionary with pair information."""
+    contract_address = None
     pair_symbol = None
     total_supply = None
     share = None
@@ -149,28 +183,15 @@ def portfolio(address):
     # balance_wei = web3.eth.getBalance(address)
     # balance = web3.fromWei(balance_wei, "ether")
     # print("balance:", balance)
-    # with open("abi.json") as f:
-    #     abi = json.loads(f.read())
     # TODO: check if the GraphQL queries can be merged into one
-    positions = get_liquidity_positions(address)
+    positions = []
+    positions += get_liquidity_positions(address)
+    positions += get_staking_positions(address)
     pairs = []
-    # for contract_address in LIQUIDITY_POOLS:
-    #     contract = web3.eth.contract(contract_address, abi=abi)
-    #     print("contract.address:", contract.address)
-    #     print("name:", contract.functions.name().call())
-    #     print("symbol:", contract.functions.symbol().call())
-    #     balance_wei = contract.functions.balanceOf(address).call()
-    #     print("balance_wei:", balance_wei)
-    #     balance = web3.fromWei(balance_wei, "ether")
-    #     print("balance:", balance)
-    #     # price = get_token_price(contract_address)
-    #     # print("price:", price)
-    #     pair_info = get_pair_info(contract_address)
-    #     pair = pair_info["pair"]
     for position in positions:
         balance = Decimal(position["liquidityTokenBalance"])
         pair = position["pair"]
-        pair_info = get_pair_info(pair, balance)
+        pair_info = extract_pair_info(pair, balance)
         pairs.append(pair_info)
     data = {
         "address": address,
