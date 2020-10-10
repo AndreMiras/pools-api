@@ -219,15 +219,18 @@ def portfolio(address):
     positions = []
     positions += get_liquidity_positions(address)
     positions += get_staking_positions(address)
+    balance_usd = 0
     pairs = []
     for position in positions:
         balance = Decimal(position["liquidityTokenBalance"])
         pair = position["pair"]
         pair_info = extract_pair_info(pair, balance, eth_price)
+        balance_usd += pair_info["balance_usd"]
         pairs.append(pair_info)
     data = {
         "address": address,
         "pairs": pairs,
+        "balance_usd": balance_usd,
     }
     return data
 
