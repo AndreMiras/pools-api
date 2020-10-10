@@ -214,6 +214,7 @@ def extract_pair_info(pair, balance, eth_price):
 @ttl_cached()
 @handle_exceptions
 def portfolio(address):
+    address = web3.toChecksumAddress(address)
     # TODO: check if the GraphQL queries can be merged into one
     eth_price = get_eth_price()
     positions = []
