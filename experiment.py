@@ -2,11 +2,13 @@
 import argparse
 import json
 import sys
+from contextlib import contextmanager
 from decimal import Decimal
 from pprint import pprint
 
 from cachetools import TTLCache, cached
 from gql import AIOHTTPTransport, Client, gql
+from gql.transport import exceptions as gql_exceptions
 from gql.transport.requests import RequestsHTTPTransport
 from web3.auto.infura import w3 as web3
 
@@ -47,6 +49,21 @@ token1Price
 volumeUSD
 txCount
 """
+
+
+def handle_exceptions(func):
+    def wrapper(*args, **kwargs):
+        try:
+            result = func(*args, **kwargs)
+        except gql_exceptions.TransportQueryError as e:
+            result = {
+                "error": "Error connecting to thegraph.com",
+                "exception": e.__class__.__name__,
+                "exception_message": e.args[0],
+            }
+        return result
+
+    return wrapper
 
 
 def ttl_cached(maxsize=1000, ttl=5 * 60):
@@ -156,33 +173,46 @@ def extract_pair_info(pair, balance, eth_price):
     pair_symbol = None
     total_supply = None
     share = None
+    tokens = []
     if pair:
         contract_address = pair["id"]
-        token0 = pair["token0"]
-        token1 = pair["token1"]
-        token0_symbol = token0["symbol"]
-        token1_symbol = token1["symbol"]
-        token0_price = Decimal(token0["derivedETH"]) * eth_price
-        token1_price = Decimal(token1["derivedETH"]) * eth_price
-        pair_symbol = f"{token0_symbol}-{token1_symbol}"
-        print("pair_symbol:", pair_symbol)
         total_supply = Decimal(pair["totalSupply"])
         print("total_supply:", total_supply)
         share = 100 * (balance / total_supply)
         print("share: {0:0.4f}".format(share))
+        for i in range(2):
+            token = pair[f"token{i}"]
+            token_symbol = token["symbol"]
+            token_price = Decimal(token["derivedETH"]) * eth_price
+            token_balance = (
+                Decimal(pair[f"reserve{i}"]) * share * Decimal("0.01")
+            )
+            token_balance_usd = token_balance * token_price
+            tokens.append(
+                {
+                    "symbol": token_symbol,
+                    "price": token_price,
+                    "balance": token_balance,
+                    "balance_usd": token_balance_usd,
+                }
+            )
+        pair_symbol = "-".join([token["symbol"] for token in tokens])
+        balance_usd = sum([token["balance_usd"] for token in tokens])
+        print("pair_symbol:", pair_symbol)
     pair_info = {
         "contract_address": contract_address,
         "owner_balance": balance,
         "pair_symbol": pair_symbol,
         "total_supply": total_supply,
         "share": share,
-        "token0_price": token0_price,
-        "token1_price": token1_price,
+        "balance_usd": balance_usd,
+        "tokens": tokens,
     }
     return pair_info
 
 
 @ttl_cached()
+@handle_exceptions
 def portfolio(address):
     # TODO: check if the GraphQL queries can be merged into one
     eth_price = get_eth_price()
