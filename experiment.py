@@ -62,12 +62,24 @@ def get_qgl_client():
 
 
 @ttl_cached()
+def get_eth_price():
+    """Retrieves ETH price from TheGraph.com"""
+    client = get_qgl_client()
+    request_string = '{bundle(id: "1") {ethPrice}}'
+    query = gql(request_string)
+    result = client.execute(query)
+    eth_price = Decimal(result["bundle"]["ethPrice"])
+    return eth_price
+
+
+@ttl_cached()
 def get_pair_info(contract_address):
     client = get_qgl_client()
-    query = gql(
+    request_string = (
         "query getPairInfo($id: ID!) {"
         "pair(id: $id) {" + GQL_PAIR_PARAMETERS + "}}"
     )
+    query = gql(request_string)
     # note The Graph doesn't seem to like it in checksum format
     contract_address = contract_address.lower()
     variable_values = {"id": contract_address}
@@ -78,7 +90,7 @@ def get_pair_info(contract_address):
 @ttl_cached()
 def get_liquidity_positions(address):
     client = get_qgl_client()
-    query = gql(
+    request_string = (
         """
         query getLiquidityPositions($id: ID!) {
           user(id: $id) {
@@ -94,6 +106,7 @@ def get_liquidity_positions(address):
         }
       """
     )
+    query = gql(request_string)
     # note The Graph doesn't seem to like it in checksum format
     address = address.lower()
     variable_values = {"id": address}
@@ -137,7 +150,7 @@ def get_token_price(address):
     return response
 
 
-def extract_pair_info(pair, balance):
+def extract_pair_info(pair, balance, eth_price):
     """Builds a dictionary with pair information."""
     contract_address = None
     pair_symbol = None
@@ -149,6 +162,8 @@ def extract_pair_info(pair, balance):
         token1 = pair["token1"]
         token0_symbol = token0["symbol"]
         token1_symbol = token1["symbol"]
+        token0_price = Decimal(token0["derivedETH"]) * eth_price
+        token1_price = Decimal(token1["derivedETH"]) * eth_price
         pair_symbol = f"{token0_symbol}-{token1_symbol}"
         print("pair_symbol:", pair_symbol)
         total_supply = Decimal(pair["totalSupply"])
@@ -161,6 +176,8 @@ def extract_pair_info(pair, balance):
         "pair_symbol": pair_symbol,
         "total_supply": total_supply,
         "share": share,
+        "token0_price": token0_price,
+        "token1_price": token1_price,
     }
     return pair_info
 
@@ -168,6 +185,7 @@ def extract_pair_info(pair, balance):
 @ttl_cached()
 def portfolio(address):
     # TODO: check if the GraphQL queries can be merged into one
+    eth_price = get_eth_price()
     positions = []
     positions += get_liquidity_positions(address)
     positions += get_staking_positions(address)
@@ -175,7 +193,7 @@ def portfolio(address):
     for position in positions:
         balance = Decimal(position["liquidityTokenBalance"])
         pair = position["pair"]
-        pair_info = extract_pair_info(pair, balance)
+        pair_info = extract_pair_info(pair, balance, eth_price)
         pairs.append(pair_info)
     data = {
         "address": address,
