@@ -148,6 +148,7 @@ def get_staking_positions(address):
             # `get_liquidity_positions()` call
             balance = web3.fromWei(balance, "ether")
             pair_info["liquidityTokenBalance"] = balance
+            pair_info["pair"]["staking_contract_address"] = staking_contract
             positions.append(pair_info)
     return positions
 
@@ -176,6 +177,8 @@ def extract_pair_info(pair, balance, eth_price):
     tokens = []
     if pair:
         contract_address = pair["id"]
+        # this was populated via `get_staking_positions()`
+        staking_contract_address = pair.get("staking_contract_address")
         total_supply = Decimal(pair["totalSupply"])
         print("total_supply:", total_supply)
         share = 100 * (balance / total_supply)
@@ -201,6 +204,7 @@ def extract_pair_info(pair, balance, eth_price):
         print("pair_symbol:", pair_symbol)
     pair_info = {
         "contract_address": contract_address,
+        "staking_contract_address": staking_contract_address,
         "owner_balance": balance,
         "pair_symbol": pair_symbol,
         "total_supply": total_supply,
