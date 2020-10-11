@@ -14,13 +14,13 @@ from web3.auto.infura import w3 as web3
 # staking contract -> pool token
 STAKING_POOLS = {
     # DAI-ETH
-    "0xa1484C3aa22a66C62b77E0AE78E15258bd0cB711": "0xA478c2975Ab1Ea89e8196811F51A7B7Ade33eB11",
+    "0xa1484C3aa22a66C62b77E0AE78E15258bd0cB711": "0xA478c2975Ab1Ea89e8196811F51A7B7Ade33eB11",  # noqa: E501
     # USDC-ETH
-    "0x7FBa4B8Dc5E7616e59622806932DBea72537A56b": "0xB4e16d0168e52d35CaCD2c6185b44281Ec28C9Dc",
+    "0x7FBa4B8Dc5E7616e59622806932DBea72537A56b": "0xB4e16d0168e52d35CaCD2c6185b44281Ec28C9Dc",  # noqa: E501
     # USDT-ETH
-    "0x6C3e4cb2E96B01F4b866965A91ed4437839A121a": "0x0d4a11d5EEaaC28EC3F61d100daF4d40471f1852",
+    "0x6C3e4cb2E96B01F4b866965A91ed4437839A121a": "0x0d4a11d5EEaaC28EC3F61d100daF4d40471f1852",  # noqa: E501
     # WBTC-ETH
-    "0xCA35e32e7926b96A9988f61d510E038108d8068e": "0xBb2b8038a1640196FbE3e38816F3e67Cba72D940",
+    "0xCA35e32e7926b96A9988f61d510E038108d8068e": "0xBb2b8038a1640196FbE3e38816F3e67Cba72D940",  # noqa: E501
 }
 
 GQL_PAIR_PARAMETERS = """
@@ -90,8 +90,7 @@ def get_eth_price():
 def get_pair_info(contract_address):
     client = get_qgl_client()
     request_string = (
-        "query getPairInfo($id: ID!) {"
-        "pair(id: $id) {" + GQL_PAIR_PARAMETERS + "}}"
+        "query getPairInfo($id: ID!) {" "pair(id: $id) {" + GQL_PAIR_PARAMETERS + "}}"
     )
     query = gql(request_string)
     # note The Graph doesn't seem to like it in checksum format
@@ -169,9 +168,7 @@ def extract_pair_info(pair, balance, eth_price):
             token = pair[f"token{i}"]
             token_symbol = token["symbol"]
             token_price = Decimal(token["derivedETH"]) * eth_price
-            token_balance = (
-                Decimal(pair[f"reserve{i}"]) * share * Decimal("0.01")
-            )
+            token_balance = Decimal(pair[f"reserve{i}"]) * share * Decimal("0.01")
             token_balance_usd = token_balance * token_price
             tokens.append(
                 {
@@ -223,9 +220,7 @@ def portfolio(address):
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Liquidity provider portfolio stats."
-    )
+    parser = argparse.ArgumentParser(description="Liquidity provider portfolio stats.")
     parser.add_argument("address", help="Address")
     args = parser.parse_args()
     address = args.address
