@@ -153,7 +153,7 @@ def get_lp_transactions(address, pairs):
     """Retrieves mints/burns transactions of a given liquidity provider."""
     client = get_qgl_client()
     gql_order_by = "orderBy: timestamp, orderDirection: desc"
-    gql_transaction_parameters = "transaction { id timestamp }"
+    gql_transaction_parameters = "transaction { id timestamp blockNumber }"
     gql_pair_parameters = "pair { id }"
     gql_mints_burns_parameters = "to sender liquidity amount0 amount1 amountUSD"
     gql_parameters = (
@@ -240,6 +240,25 @@ def extract_pair_info(pair, balance, eth_price):
     return pair_info
 
 
+def merge_lp_transactions(mints, burns):
+    """Merges mints/burns transactions and order by timestamp."""
+    mints = list(map(lambda m: dict(m, **{"type": "mint"}), mints))
+    burns = list(map(lambda m: dict(m, **{"type": "burn"}), burns))
+    transactions = mints + burns
+    # TODO: reverse=True
+    transactions = sorted(transactions, key=lambda tx: tx["transaction"]["timestamp"])
+    return transactions
+
+
+def group_lp_transactions(transactions):
+    """Groups transactions by pair."""
+    transaction_dict = {}
+    for transaction in transactions:
+        pair = transaction["pair"]["id"]
+        transaction_dict[pair] = transaction_dict.get(pair, []) + [transaction]
+    return transaction_dict
+
+
 @ttl_cached()
 @handle_exceptions
 def portfolio(address):
@@ -249,12 +268,21 @@ def portfolio(address):
     positions = []
     positions += get_liquidity_positions(address)
     positions += get_staking_positions(address)
+    pair_addresses = [pair["pair"]["id"] for pair in positions]
+    mints_burns = get_lp_transactions(address, pair_addresses)
+    mints = mints_burns["mints"]
+    burns = mints_burns["burns"]
+    transactions = merge_lp_transactions(mints, burns)
+    transaction_dict = group_lp_transactions(transactions)
     balance_usd = 0
     pairs = []
     for position in positions:
         balance = Decimal(position["liquidityTokenBalance"])
         pair = position["pair"]
         pair_info = extract_pair_info(pair, balance, eth_price)
+        contract_address = pair_info["contract_address"]
+        # even though the pair exists, we may not find transactions history
+        pair_info["transactions"] = transaction_dict.get(contract_address, [])
         balance_usd += pair_info["balance_usd"]
         pairs.append(pair_info)
     data = {
@@ -271,9 +299,6 @@ def main():
     args = parser.parse_args()
     address = args.address
     data = portfolio(address)
-    pairs = [pair["contract_address"] for pair in data["pairs"]]
-    pprint(data)
-    data = get_lp_transactions(address, pairs)
     pprint(data)
 
 
