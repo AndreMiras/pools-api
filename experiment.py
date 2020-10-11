@@ -149,26 +149,36 @@ def get_staking_positions(address):
     return positions
 
 
-def get_lp_transactions(address):
+def get_lp_transactions(address, pairs):
     """Retrieves mints/burns transactions of a given liquidity provider."""
     client = get_qgl_client()
+    gql_order_by = "orderBy: timestamp, orderDirection: desc"
     gql_transaction_parameters = "transaction { id timestamp }"
-    gql_mints_burns_parameters = "id to sender liquidity amount0 amount1 amountUSD"
-    gql_parameters = gql_transaction_parameters + " " + gql_mints_burns_parameters
+    gql_pair_parameters = "pair { id }"
+    gql_mints_burns_parameters = "to sender liquidity amount0 amount1 amountUSD"
+    gql_parameters = (
+        gql_transaction_parameters
+        + " "
+        + gql_pair_parameters
+        + " "
+        + gql_mints_burns_parameters
+    )
     request_string = (
         """
-        query getMintsBurnsTransactions($address: Bytes!) {
+        query getMintsBurnsTransactions($address: Bytes! $pairs: [String!]) {
           mints(
-            where: { to: $address },
-            orderBy: timestamp, orderDirection: desc
+            where: { to: $address pair_in: $pairs}, """
+        + gql_order_by
+        + """
           ) {
         """
         + gql_parameters
         + """
           }
           burns(
-            where: { sender: $address },
-            orderBy: timestamp, orderDirection: desc
+            where: { sender: $address pair_in: $pairs}, """
+        + gql_order_by
+        + """
           ) {
         """
         + gql_parameters
@@ -180,7 +190,7 @@ def get_lp_transactions(address):
     query = gql(request_string)
     # note The Graph doesn't seem to like it in checksum format
     address = address.lower()
-    variable_values = {"address": address}
+    variable_values = {"address": address, "pairs": pairs}
     result = client.execute(query, variable_values=variable_values)
     return result
 
@@ -261,8 +271,9 @@ def main():
     args = parser.parse_args()
     address = args.address
     data = portfolio(address)
+    pairs = [pair["contract_address"] for pair in data["pairs"]]
     pprint(data)
-    data = get_lp_transactions(address)
+    data = get_lp_transactions(address, pairs)
     pprint(data)
 
 
