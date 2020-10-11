@@ -149,6 +149,42 @@ def get_staking_positions(address):
     return positions
 
 
+def get_lp_transactions(address):
+    """Retrieves mints/burns transactions of a given liquidity provider."""
+    client = get_qgl_client()
+    gql_transaction_parameters = "transaction { id timestamp }"
+    gql_mints_burns_parameters = "id to sender liquidity amount0 amount1 amountUSD"
+    gql_parameters = gql_transaction_parameters + " " + gql_mints_burns_parameters
+    request_string = (
+        """
+        query getMintsBurnsTransactions($address: Bytes!) {
+          mints(
+            where: { to: $address },
+            orderBy: timestamp, orderDirection: desc
+          ) {
+        """
+        + gql_parameters
+        + """
+          }
+          burns(
+            where: { sender: $address },
+            orderBy: timestamp, orderDirection: desc
+          ) {
+        """
+        + gql_parameters
+        + """
+          }
+        }
+      """
+    )
+    query = gql(request_string)
+    # note The Graph doesn't seem to like it in checksum format
+    address = address.lower()
+    variable_values = {"address": address}
+    result = client.execute(query, variable_values=variable_values)
+    return result
+
+
 def extract_pair_info(pair, balance, eth_price):
     """Builds a dictionary with pair information."""
     contract_address = None
@@ -225,6 +261,8 @@ def main():
     args = parser.parse_args()
     address = args.address
     data = portfolio(address)
+    pprint(data)
+    data = get_lp_transactions(address)
     pprint(data)
 
 
