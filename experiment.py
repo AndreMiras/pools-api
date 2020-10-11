@@ -1,13 +1,11 @@
 #!/usr/bin/env python
 import argparse
 import json
-import sys
-from contextlib import contextmanager
 from decimal import Decimal
 from pprint import pprint
 
 from cachetools import TTLCache, cached
-from gql import AIOHTTPTransport, Client, gql
+from gql import Client, gql
 from gql.transport import exceptions as gql_exceptions
 from gql.transport.requests import RequestsHTTPTransport
 from web3.auto.infura import w3 as web3
@@ -71,7 +69,6 @@ def ttl_cached(maxsize=1000, ttl=5 * 60):
 
 
 def get_qgl_client():
-    # transport = AIOHTTPTransport(url="https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2")
     transport = RequestsHTTPTransport(
         url="https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2"
     )
