@@ -153,21 +153,6 @@ def get_staking_positions(address):
     return positions
 
 
-def get_token_price(address):
-    from pycoingecko import CoinGeckoAPI
-
-    cg = CoinGeckoAPI()
-    response = cg.get_token_price(
-        "ethereum",
-        address,
-        "usd",
-        include_market_cap="true",
-        include_24hr_vol="true",
-        include_last_updated_at="true",
-    )
-    return response
-
-
 def extract_pair_info(pair, balance, eth_price):
     """Builds a dictionary with pair information."""
     contract_address = None
