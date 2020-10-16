@@ -1,0 +1,5 @@
+fastapi
+uvicorn
+gql==3.0.0a3
+web3
+cachetools

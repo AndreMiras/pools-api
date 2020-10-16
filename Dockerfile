@@ -14,7 +14,7 @@ RUN apt update -qq > /dev/null && apt --yes install --no-install-recommends \
     make \
     && apt --yes autoremove && apt --yes clean
 COPY requirements.txt Makefile ./
-RUN make venv
+RUN make virtualenv
 COPY . /app
 
 CMD venv/bin/uvicorn main:app --host 0.0.0.0 --port $PORT
