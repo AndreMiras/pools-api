@@ -156,6 +156,7 @@ class TestMain:
         assert "FastAPI - ReDoc" in response.text
 
     def test_portfolio(self):
+        """Basic portfolio testing."""
         url = self.url_portfolio
         m_contract = mock.Mock()
         m_contract().functions.balanceOf().call.return_value = 0
@@ -175,3 +176,23 @@ class TestMain:
         assert m_client_execute.call_count == 3
         assert response.status_code == status.HTTP_200_OK
         assert response.json().keys() == {"address", "pairs", "balance_usd"}
+
+    def test_portfolio_non_checksum_address(self):
+        """Address without checksum should be handled without failing."""
+        path_params = {"address": self.address.lower()}
+        url = self.app.url_path_for("portfolio", **path_params)
+        m_contract = mock.Mock()
+        m_contract().functions.balanceOf().call.return_value = 0
+        m_execute = mock.Mock(
+            side_effect=(
+                GQL_ETH_PRICE_RESPONSE,
+                GQL_LIQUIDITY_POSITIONS_RESPONSE,
+                GQL_MINTS_BURNS_TX_RESPONSE,
+                GQL_PAIR_INFO_RESPONSE,
+            )
+        )
+        with patch_web3_contract(m_contract), patch_client_execute(
+            m_execute
+        ), patch_session_fetch_schema():
+            response = self.client.get(url)
+        assert response.status_code == status.HTTP_200_OK
