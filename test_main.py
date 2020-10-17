@@ -116,18 +116,17 @@ GQL_MINTS_BURNS_TX_RESPONSE = {
 }
 
 
-def patch_web3_contract():
-    return mock.patch("experiment.web3.eth.contract")
+def patch_web3_contract(m_contract):
+    return mock.patch("experiment.web3.eth.contract", m_contract)
 
 
-def patch_web3_balance_of():
-    m_contract = patch_web3_contract()
-    m_contract.balanceOf.return_value = 1
-    return m_contract
+def patch_client_execute(m_execute):
+    return mock.patch("experiment.Client.execute", m_execute)
 
 
-def patch_client_execute():
-    return mock.patch("experiment.Client.execute")
+def patch_session_fetch_schema():
+    """Bypassing `fetch_schema()` on unit tests."""
+    return mock.patch("gql.client.SyncClientSession.fetch_schema")
 
 
 class TestMain:
@@ -158,20 +157,21 @@ class TestMain:
 
     def test_portfolio(self):
         url = self.url_portfolio
-        with mock.patch(
-            "experiment.web3.eth.contract"
-        ) as m_contract, patch_client_execute() as m_client_execute:
-            m_client_execute.side_effect = (
+        m_contract = mock.Mock()
+        m_contract().functions.balanceOf().call.return_value = 0
+        m_execute = mock.Mock(
+            side_effect=(
                 GQL_ETH_PRICE_RESPONSE,
                 GQL_LIQUIDITY_POSITIONS_RESPONSE,
                 GQL_MINTS_BURNS_TX_RESPONSE,
                 GQL_PAIR_INFO_RESPONSE,
             )
-            m_contract.return_value.functions.balanceOf.return_value.call.return_value = (
-                0
-            )
+        )
+        with patch_web3_contract(m_contract), patch_client_execute(
+            m_execute
+        ) as m_client_execute, patch_session_fetch_schema():
             response = self.client.get(url)
-        assert m_contract.return_value.functions.balanceOf.return_value.call.call_count == 4
+        assert m_contract().functions.balanceOf().call.call_count == 4
         assert m_client_execute.call_count == 3
         assert response.status_code == status.HTTP_200_OK
-        assert response.json().keys() == {'address', 'pairs', 'balance_usd'}
+        assert response.json().keys() == {"address", "pairs", "balance_usd"}
