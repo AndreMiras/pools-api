@@ -94,7 +94,7 @@ GQL_MINTS_BURNS_TX_RESPONSE = {
             "to": "0x000000000000000000000000000000000000dead",
             "transaction": {
                 "blockNumber": "11046485",
-                "id": "0x7f9080f8c72c0ec21ec7e1690b94c52ebc4787bca66f2d154f62749c5f38fba0",
+                "id": "0x7f9080f8c72c0ec21ec7e1690b94c52ebc4787bca66f2d154f6274...",
                 "timestamp": "1602581467",
             },
         },
@@ -108,7 +108,7 @@ GQL_MINTS_BURNS_TX_RESPONSE = {
             "to": "0x000000000000000000000000000000000000dead",
             "transaction": {
                 "blockNumber": "10543065",
-                "id": "0x08d4f7eb1896d9ec25d2d36f72252cdb45f735b922fd1e515e1ce628b3b14e49",
+                "id": "0x08d4f7eb1896d9ec25d2d36f72252cdb45f735b922fd1e515e1ce6...",
                 "timestamp": "1595873620",
             },
         },
