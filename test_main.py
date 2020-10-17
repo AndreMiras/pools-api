@@ -1,5 +1,6 @@
 from unittest import mock
 
+import pytest
 from fastapi.testclient import TestClient
 from starlette import status
 
@@ -218,3 +219,12 @@ class TestMain:
         ), patch_session_fetch_schema():
             response = self.client.get(url)
         assert response.status_code == status.HTTP_200_OK
+
+    def test_portfolio_invalid_address(self):
+        """Invalid addresses are currently crashing the application."""
+        path_params = {"address": "0xInvalidAdress"}
+        url = self.app.url_path_for("portfolio", **path_params)
+        with pytest.raises(
+            ValueError, match="when sending a str, it must be a hex string"
+        ):
+            self.client.get(url)
