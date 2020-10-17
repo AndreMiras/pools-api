@@ -4,11 +4,15 @@ import json
 from decimal import Decimal
 from pprint import pprint
 
-from cachetools import TTLCache, cached
+from cachetools.func import ttl_cache
 from gql import Client, gql
 from gql.transport import exceptions as gql_exceptions
 from gql.transport.requests import RequestsHTTPTransport
 from web3.auto.infura import w3 as web3
+
+# default cache settings
+CACHE_MAXSIZE = 1000
+CACHE_TTL = 5 * 60
 
 # pool tokens that can be staked
 # staking contract -> pool token
@@ -61,10 +65,6 @@ def handle_exceptions(func):
     return wrapper
 
 
-def ttl_cached(maxsize=1000, ttl=5 * 60):
-    return cached(cache=TTLCache(maxsize=maxsize, ttl=ttl))
-
-
 def get_qgl_client():
     transport = RequestsHTTPTransport(
         url="https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2"
@@ -72,7 +72,7 @@ def get_qgl_client():
     return Client(transport=transport, fetch_schema_from_transport=True)
 
 
-@ttl_cached()
+@ttl_cache(maxsize=CACHE_MAXSIZE, ttl=CACHE_TTL)
 def get_eth_price():
     """Retrieves ETH price from TheGraph.com"""
     client = get_qgl_client()
@@ -83,7 +83,7 @@ def get_eth_price():
     return eth_price
 
 
-@ttl_cached()
+@ttl_cache(maxsize=CACHE_MAXSIZE, ttl=CACHE_TTL)
 def get_pair_info(contract_address):
     client = get_qgl_client()
     request_string = (
@@ -97,7 +97,7 @@ def get_pair_info(contract_address):
     return result
 
 
-@ttl_cached()
+@ttl_cache(maxsize=CACHE_MAXSIZE, ttl=CACHE_TTL)
 def get_liquidity_positions(address):
     client = get_qgl_client()
     request_string = (
@@ -125,7 +125,7 @@ def get_liquidity_positions(address):
     return result
 
 
-@ttl_cached()
+@ttl_cache(maxsize=CACHE_MAXSIZE, ttl=CACHE_TTL)
 def get_staking_positions(address):
     """Given an address, returns all the staking positions."""
     # abi is the same for all contracts
@@ -256,7 +256,7 @@ def group_lp_transactions(transactions):
     return transaction_dict
 
 
-@ttl_cached()
+@ttl_cache(maxsize=CACHE_MAXSIZE, ttl=CACHE_TTL)
 @handle_exceptions
 def portfolio(address):
     address = web3.toChecksumAddress(address)
