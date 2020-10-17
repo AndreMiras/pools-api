@@ -141,6 +141,28 @@ class TestMain:
         self.app = app
         self.client = TestClient(app)
 
+    def teardown_method(self):
+        self.clear_cache()
+
+    def clear_cache(self):
+        from experiment import (
+            get_eth_price,
+            get_liquidity_positions,
+            get_pair_info,
+            get_staking_positions,
+            portfolio,
+        )
+
+        functions = (
+            get_eth_price,
+            get_liquidity_positions,
+            get_pair_info,
+            get_staking_positions,
+            portfolio,
+        )
+        for function in functions:
+            function.cache_clear()
+
     def test_urls(self):
         """Checks URL patterns."""
         assert self.app.url_path_for("index") == self.url_index
