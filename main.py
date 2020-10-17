@@ -12,7 +12,7 @@ app.add_middleware(CORSMiddleware, allow_origins=allow_origins)
 
 
 @app.get("/")
-def read_root():
+def index():
     return RedirectResponse(app.redoc_url)
 
 
