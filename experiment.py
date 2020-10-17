@@ -6,7 +6,6 @@ from pprint import pprint
 
 from cachetools.func import ttl_cache
 from gql import Client, gql
-from gql.transport import exceptions as gql_exceptions
 from gql.transport.requests import RequestsHTTPTransport
 from web3.auto.infura import w3 as web3
 
@@ -52,21 +51,6 @@ volumeUSD
 
 class InvalidAddressException(Exception):
     """The Ethereum address is invalid."""
-
-
-def handle_exceptions(func):
-    def wrapper(*args, **kwargs):
-        try:
-            result = func(*args, **kwargs)
-        except gql_exceptions.TransportQueryError as e:
-            result = {
-                "error": "Error connecting to thegraph.com",
-                "exception": e.__class__.__name__,
-                "exception_message": e.args[0],
-            }
-        return result
-
-    return wrapper
 
 
 def get_qgl_client():
@@ -261,7 +245,6 @@ def group_lp_transactions(transactions):
 
 
 @ttl_cache(maxsize=CACHE_MAXSIZE, ttl=CACHE_TTL)
-@handle_exceptions
 def portfolio(address):
     try:
         address = web3.toChecksumAddress(address)
