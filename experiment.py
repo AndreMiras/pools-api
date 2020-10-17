@@ -50,6 +50,10 @@ volumeUSD
 """
 
 
+class InvalidAddressException(Exception):
+    """The Ethereum address is invalid."""
+
+
 def handle_exceptions(func):
     def wrapper(*args, **kwargs):
         try:
@@ -259,7 +263,10 @@ def group_lp_transactions(transactions):
 @ttl_cache(maxsize=CACHE_MAXSIZE, ttl=CACHE_TTL)
 @handle_exceptions
 def portfolio(address):
-    address = web3.toChecksumAddress(address)
+    try:
+        address = web3.toChecksumAddress(address)
+    except ValueError:
+        raise InvalidAddressException(address)
     # TODO: check if the GraphQL queries can be merged into one
     eth_price = get_eth_price()
     positions = []

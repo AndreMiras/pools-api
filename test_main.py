@@ -1,6 +1,5 @@
 from unittest import mock
 
-import pytest
 from fastapi.testclient import TestClient
 from starlette import status
 
@@ -224,7 +223,6 @@ class TestMain:
         """Invalid addresses are currently crashing the application."""
         path_params = {"address": "0xInvalidAdress"}
         url = self.app.url_path_for("portfolio", **path_params)
-        with pytest.raises(
-            ValueError, match="when sending a str, it must be a hex string"
-        ):
-            self.client.get(url)
+        response = self.client.get(url)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.json() == {"detail": "Invalid address 0xInvalidAdress"}
