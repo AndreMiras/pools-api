@@ -15,7 +15,7 @@ PYTHON_MINOR_VERSION=8
 PYTHON_VERSION=$(PYTHON_MAJOR_VERSION).$(PYTHON_MINOR_VERSION)
 PYTHON_MAJOR_MINOR=$(PYTHON_MAJOR_VERSION)$(PYTHON_MINOR_VERSION)
 PYTHON_WITH_VERSION=python$(PYTHON_VERSION)
-SOURCES=experiment.py main.py
+SOURCES=experiment.py main.py test_main.py
 DOCKER_IMAGE=andremiras/uniswap-roi
 DOCKER_COMMAND ?= /bin/bash
 DOCKER_PORT=8000
@@ -30,8 +30,8 @@ virtualenv: $(VIRTUAL_ENV)
 virtualenv-test: virtualenv
 	$(PIP) install -r $(REQUIREMENTS_TEST)
 
-test:
-	@echo Nothing to do
+test: virtualenv-test
+	$(PYTEST) test_main.py
 
 lint/isort: virtualenv-test
 	$(ISORT) --check-only --diff $(SOURCES)
