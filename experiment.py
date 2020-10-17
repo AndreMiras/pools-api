@@ -39,13 +39,10 @@ token1 {
 }
 reserve0
 reserve1
-reserveUSD
-trackedReserveETH
 totalSupply
 token0Price
 token1Price
 volumeUSD
-txCount
 """
 
 
