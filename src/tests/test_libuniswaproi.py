@@ -7,6 +7,7 @@ from .utils import (
     GQL_PAIR_INFO_RESPONSE,
     patch_client_execute,
     patch_session_fetch_schema,
+    patch_web3_contract,
 )
 
 
@@ -60,3 +61,11 @@ class TestLibUniswapRoi:
         ]
         assert len(positions) == 2
         assert positions[0].keys() == {"liquidityTokenBalance", "pair"}
+
+    def test_get_staking_positions(self):
+        m_contract = mock.Mock()
+        m_contract().functions.balanceOf().call.return_value = 0
+        with patch_web3_contract(m_contract):
+            positions = self.libuniswaproi.get_staking_positions(self.address)
+        assert m_contract().functions.balanceOf().call.call_count == 4
+        assert len(positions) == 0
