@@ -109,7 +109,8 @@ def get_liquidity_positions(address):
     address = address.lower()
     variable_values = {"id": address}
     result = client.execute(query, variable_values=variable_values)
-    result = result["user"]["liquidityPositions"]
+    user = result["user"] or {}
+    result = user.get("liquidityPositions", [])
     return result
 
 

@@ -20,6 +20,19 @@ class TestLibUniswapRoi:
             import libuniswaproi
         self.libuniswaproi = libuniswaproi
 
+    def teardown_method(self):
+        self.clear_cache()
+
+    def clear_cache(self):
+        functions = (
+            self.libuniswaproi.get_eth_price,
+            self.libuniswaproi.get_liquidity_positions,
+            self.libuniswaproi.get_pair_info,
+            self.libuniswaproi.get_staking_positions,
+        )
+        for function in functions:
+            function.cache_clear()
+
     def test_get_eth_price(self):
         m_execute = mock.Mock(return_value=GQL_ETH_PRICE_RESPONSE)
         with patch_client_execute(m_execute), patch_session_fetch_schema():
@@ -61,6 +74,19 @@ class TestLibUniswapRoi:
         ]
         assert len(positions) == 2
         assert positions[0].keys() == {"liquidityTokenBalance", "pair"}
+
+    def test_get_liquidity_positions_no_liquidity(self):
+        """Makes sure the function doesn't crash on no liquidity positions."""
+        m_execute = mock.Mock(return_value={"user": None})
+        with patch_client_execute(m_execute), patch_session_fetch_schema():
+            positions = self.libuniswaproi.get_liquidity_positions(self.address)
+        assert m_execute.call_args_list == [
+            mock.call(
+                mock.ANY,
+                variable_values={"id": self.address.lower()},
+            )
+        ]
+        assert positions == []
 
     def test_get_staking_positions(self):
         m_contract = mock.Mock()
