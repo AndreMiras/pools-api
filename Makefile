@@ -15,7 +15,7 @@ PYTHON_MINOR_VERSION=8
 PYTHON_VERSION=$(PYTHON_MAJOR_VERSION).$(PYTHON_MINOR_VERSION)
 PYTHON_MAJOR_MINOR=$(PYTHON_MAJOR_VERSION)$(PYTHON_MINOR_VERSION)
 PYTHON_WITH_VERSION=python$(PYTHON_VERSION)
-SOURCES=experiment.py main.py test_main.py
+SOURCES=src/
 DOCKER_IMAGE=andremiras/uniswap-roi
 DOCKER_COMMAND ?= /bin/bash
 DOCKER_PORT=8000
@@ -72,7 +72,7 @@ $(VENV_TEST): $(VENV_PROD) $(REQUIREMENTS_TEST) REVISION
 	@touch $@
 
 run/uvicorn: $(VIRTUAL_ENV)
-	$(UVICORN) main:app --reload
+	PYTHONPATH=src $(UVICORN) main:app --reload
 
 docker/build:
 	docker build --tag=$(DOCKER_IMAGE) .
