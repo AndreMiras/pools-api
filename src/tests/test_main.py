@@ -117,11 +117,11 @@ GQL_MINTS_BURNS_TX_RESPONSE = {
 
 
 def patch_web3_contract(m_contract):
-    return mock.patch("experiment.web3.eth.contract", m_contract)
+    return mock.patch("libuniswaproi.web3.eth.contract", m_contract)
 
 
 def patch_client_execute(m_execute):
-    return mock.patch("experiment.Client.execute", m_execute)
+    return mock.patch("libuniswaproi.Client.execute", m_execute)
 
 
 def patch_session_fetch_schema():
@@ -145,7 +145,7 @@ class TestMain:
         self.clear_cache()
 
     def clear_cache(self):
-        from experiment import (
+        from libuniswaproi import (
             get_eth_price,
             get_liquidity_positions,
             get_pair_info,

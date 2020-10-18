@@ -31,7 +31,7 @@ virtualenv-test: virtualenv
 	$(PIP) install -r $(REQUIREMENTS_TEST)
 
 test: virtualenv-test
-	$(PYTEST) test_main.py
+	PYTHONPATH=src $(PYTEST) src/tests/
 
 lint/isort: virtualenv-test
 	$(ISORT) --check-only --diff $(SOURCES)
