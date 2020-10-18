@@ -17,4 +17,4 @@ COPY requirements.txt Makefile ./
 RUN make virtualenv
 COPY . /app
 
-CMD venv/bin/uvicorn main:app --host 0.0.0.0 --port $PORT
+CMD PYTHONPATH=src/ venv/bin/uvicorn main:app --host 0.0.0.0 --port $PORT
