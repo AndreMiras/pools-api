@@ -6,6 +6,7 @@ from pprint import pprint
 
 from cachetools.func import ttl_cache
 from gql import Client, gql
+from gql.transport.exceptions import TransportServerError
 from gql.transport.requests import RequestsHTTPTransport
 from web3.auto.infura import w3 as web3
 
@@ -49,15 +50,27 @@ volumeUSD
 """
 
 
-class InvalidAddressException(Exception):
+class UniswapRoiException(Exception):
+    """Base library exception."""
+
+
+class InvalidAddressException(UniswapRoiException):
     """The Ethereum address is invalid."""
+
+
+class TheGraphServiceDownException(UniswapRoiException):
+    """When the graph is down, e.g. giving `502 Server Error: Bad Gateway`."""
 
 
 def get_qgl_client():
     transport = RequestsHTTPTransport(
         url="https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2"
     )
-    return Client(transport=transport, fetch_schema_from_transport=True)
+    try:
+        client = Client(transport=transport, fetch_schema_from_transport=True)
+    except TransportServerError as e:
+        raise TheGraphServiceDownException(e)
+    return client
 
 
 @ttl_cache(maxsize=CACHE_MAXSIZE, ttl=CACHE_TTL)

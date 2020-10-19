@@ -1,5 +1,10 @@
 from decimal import Decimal
+from io import BytesIO
 from unittest import mock
+
+import pytest
+from requests.models import Response
+from starlette import status
 
 from .utils import (
     GQL_ETH_PRICE_RESPONSE,
@@ -9,6 +14,14 @@ from .utils import (
     patch_session_fetch_schema,
     patch_web3_contract,
 )
+
+
+def patch_session_request(content, status_code=status.HTTP_200_OK):
+    response = Response()
+    response.status_code = status_code
+    response.raw = BytesIO(content.encode())
+    m_request = mock.Mock(return_value=response)
+    return mock.patch("requests.Session.request", m_request)
 
 
 class TestLibUniswapRoi:
@@ -32,6 +45,36 @@ class TestLibUniswapRoi:
         )
         for function in functions:
             function.cache_clear()
+
+    def test_get_qgl_client(self):
+        with patch_session_fetch_schema() as m_fetch_schema:
+            client = self.libuniswaproi.get_qgl_client()
+        assert m_fetch_schema.call_args_list == [mock.call()]
+        assert client is not None
+
+    def test_get_qgl_client_exception(self):
+        """
+        On `TransportServerError` exception a custom
+        `TheGraphServiceDownException` should be re-raised.
+        """
+        content = ""
+        status_code = status.HTTP_502_BAD_GATEWAY
+        with pytest.raises(
+            self.libuniswaproi.TheGraphServiceDownException, match="502 Server Error"
+        ), patch_session_request(content, status_code) as m_request:
+            self.libuniswaproi.get_qgl_client()
+        assert m_request.call_args_list == [
+            mock.call(
+                "POST",
+                "https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2",
+                headers=None,
+                auth=None,
+                cookies=None,
+                timeout=None,
+                verify=True,
+                json=mock.ANY,
+            )
+        ]
 
     def test_get_eth_price(self):
         m_execute = mock.Mock(return_value=GQL_ETH_PRICE_RESPONSE)
