@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import argparse
 import json
+from contextlib import contextmanager
 from decimal import Decimal
 from pprint import pprint
 from typing import Dict
@@ -64,24 +65,26 @@ class TheGraphServiceDownException(UniswapRoiException):
     """When the graph is down, e.g. giving `502 Server Error: Bad Gateway`."""
 
 
+@contextmanager
+def gql_exceptions():
+    try:
+        yield
+    except TransportServerError as e:
+        raise TheGraphServiceDownException(e)
+
+
 def get_qgl_client():
     transport = RequestsHTTPTransport(
         url="https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2"
     )
-    try:
-        client = Client(transport=transport, fetch_schema_from_transport=True)
-    except TransportServerError as e:
-        raise TheGraphServiceDownException(e)
-    return client
+    with gql_exceptions():
+        return Client(transport=transport, fetch_schema_from_transport=True)
 
 
 def qgl_client_execute(document: DocumentNode, *args, **kwargs) -> Dict:
     client = get_qgl_client()
-    try:
-        result = client.execute(document, *args, **kwargs)
-    except TransportServerError as e:
-        raise TheGraphServiceDownException(e)
-    return result
+    with gql_exceptions():
+        return client.execute(document, *args, **kwargs)
 
 
 @ttl_cache(maxsize=CACHE_MAXSIZE, ttl=CACHE_TTL)
