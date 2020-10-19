@@ -110,12 +110,12 @@ class TestMain:
         """The Graph down is a known/caught exception."""
         path_params = {"address": self.address}
         url = self.app.url_path_for("portfolio", **path_params)
-        m_get_qgl_client = mock.Mock(
+        m_get_gql_client = mock.Mock(
             side_effect=self.libuniswaproi.TheGraphServiceDownException(
                 "502 Server Error"
             )
         )
-        with mock.patch("libuniswaproi.get_qgl_client", m_get_qgl_client):
+        with mock.patch("libuniswaproi.get_gql_client", m_get_gql_client):
             response = self.client.get(url)
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
         assert response.json() == {

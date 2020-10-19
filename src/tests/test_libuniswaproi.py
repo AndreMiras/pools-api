@@ -47,13 +47,13 @@ class TestLibUniswapRoi:
         for function in functions:
             function.cache_clear()
 
-    def test_get_qgl_client(self):
+    def test_get_gql_client(self):
         with patch_session_fetch_schema() as m_fetch_schema:
-            client = self.libuniswaproi.get_qgl_client()
+            client = self.libuniswaproi.get_gql_client()
         assert m_fetch_schema.call_args_list == [mock.call()]
         assert client is not None
 
-    def test_get_qgl_client_exception(self):
+    def test_get_gql_client_exception(self):
         """
         On `TransportServerError` exception a custom
         `TheGraphServiceDownException` should be re-raised.
@@ -63,7 +63,7 @@ class TestLibUniswapRoi:
         with pytest.raises(
             self.libuniswaproi.TheGraphServiceDownException, match="502 Server Error"
         ), patch_session_request(content, status_code) as m_request:
-            self.libuniswaproi.get_qgl_client()
+            self.libuniswaproi.get_gql_client()
         assert m_request.call_args_list == [
             mock.call(
                 "POST",

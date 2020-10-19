@@ -73,7 +73,7 @@ def gql_exceptions():
         raise TheGraphServiceDownException(e)
 
 
-def get_qgl_client():
+def get_gql_client():
     transport = RequestsHTTPTransport(
         url="https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2"
     )
@@ -81,8 +81,8 @@ def get_qgl_client():
         return Client(transport=transport, fetch_schema_from_transport=True)
 
 
-def qgl_client_execute(document: DocumentNode, *args, **kwargs) -> Dict:
-    client = get_qgl_client()
+def gql_client_execute(document: DocumentNode, *args, **kwargs) -> Dict:
+    client = get_gql_client()
     with gql_exceptions():
         return client.execute(document, *args, **kwargs)
 
@@ -92,7 +92,7 @@ def get_eth_price():
     """Retrieves ETH price from TheGraph.com"""
     request_string = '{bundle(id: "1") {ethPrice}}'
     query = gql(request_string)
-    result = qgl_client_execute(query)
+    result = gql_client_execute(query)
     eth_price = Decimal(result["bundle"]["ethPrice"])
     return eth_price
 
@@ -106,7 +106,7 @@ def get_pair_info(contract_address):
     # note The Graph doesn't seem to like it in checksum format
     contract_address = contract_address.lower()
     variable_values = {"id": contract_address}
-    result = qgl_client_execute(query, variable_values=variable_values)
+    result = gql_client_execute(query, variable_values=variable_values)
     return result
 
 
@@ -132,7 +132,7 @@ def get_liquidity_positions(address):
     # note The Graph doesn't seem to like it in checksum format
     address = address.lower()
     variable_values = {"id": address}
-    result = qgl_client_execute(query, variable_values=variable_values)
+    result = gql_client_execute(query, variable_values=variable_values)
     user = result["user"] or {}
     result = user.get("liquidityPositions", [])
     return result
@@ -200,7 +200,7 @@ def get_lp_transactions(address, pairs):
     # note The Graph doesn't seem to like it in checksum format
     address = address.lower()
     variable_values = {"address": address, "pairs": pairs}
-    result = qgl_client_execute(query, variable_values=variable_values)
+    result = gql_client_execute(query, variable_values=variable_values)
     return result
 
 
