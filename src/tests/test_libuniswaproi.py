@@ -3,6 +3,7 @@ from io import BytesIO
 from unittest import mock
 
 import pytest
+from gql.transport.exceptions import TransportServerError
 from requests.models import Response
 from starlette import status
 
@@ -83,6 +84,25 @@ class TestLibUniswapRoi:
         assert m_execute.call_count == 1
         assert eth_price == Decimal("321.123")
         assert str(eth_price) == GQL_ETH_PRICE_RESPONSE["bundle"]["ethPrice"]
+
+    def test_get_eth_price_exception(self):
+        """TheGraph exceptions should be caught and reraised."""
+        m_execute = mock.Mock(
+            side_effect=TransportServerError(
+                {
+                    "message": (
+                        "service is overloaded and can not run the query right now."
+                        "Please try again in a few minutes"
+                    )
+                }
+            )
+        )
+        with pytest.raises(
+            self.libuniswaproi.TheGraphServiceDownException,
+            match="service is overloaded",
+        ), patch_client_execute(m_execute), patch_session_fetch_schema():
+            self.libuniswaproi.get_eth_price()
+        assert m_execute.call_count == 1
 
     def test_get_pair_info(self):
         m_execute = mock.Mock(return_value=GQL_PAIR_INFO_RESPONSE)

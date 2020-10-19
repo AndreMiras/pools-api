@@ -1,7 +1,6 @@
 from unittest import mock
 
 from fastapi.testclient import TestClient
-from gql.transport.exceptions import TransportServerError
 from starlette import status
 
 from .utils import (
