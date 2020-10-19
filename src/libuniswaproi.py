@@ -3,11 +3,13 @@ import argparse
 import json
 from decimal import Decimal
 from pprint import pprint
+from typing import Dict
 
 from cachetools.func import ttl_cache
 from gql import Client, gql
 from gql.transport.exceptions import TransportServerError
 from gql.transport.requests import RequestsHTTPTransport
+from graphql import DocumentNode
 from web3.auto.infura import w3 as web3
 
 # default cache settings
@@ -73,20 +75,27 @@ def get_qgl_client():
     return client
 
 
+def qgl_client_execute(document: DocumentNode, *args, **kwargs) -> Dict:
+    client = get_qgl_client()
+    try:
+        result = client.execute(document, *args, **kwargs)
+    except TransportServerError as e:
+        raise TheGraphServiceDownException(e)
+    return result
+
+
 @ttl_cache(maxsize=CACHE_MAXSIZE, ttl=CACHE_TTL)
 def get_eth_price():
     """Retrieves ETH price from TheGraph.com"""
-    client = get_qgl_client()
     request_string = '{bundle(id: "1") {ethPrice}}'
     query = gql(request_string)
-    result = client.execute(query)
+    result = qgl_client_execute(query)
     eth_price = Decimal(result["bundle"]["ethPrice"])
     return eth_price
 
 
 @ttl_cache(maxsize=CACHE_MAXSIZE, ttl=CACHE_TTL)
 def get_pair_info(contract_address):
-    client = get_qgl_client()
     request_string = (
         "query getPairInfo($id: ID!) {" "pair(id: $id) {" + GQL_PAIR_PARAMETERS + "}}"
     )
@@ -94,13 +103,12 @@ def get_pair_info(contract_address):
     # note The Graph doesn't seem to like it in checksum format
     contract_address = contract_address.lower()
     variable_values = {"id": contract_address}
-    result = client.execute(query, variable_values=variable_values)
+    result = qgl_client_execute(query, variable_values=variable_values)
     return result
 
 
 @ttl_cache(maxsize=CACHE_MAXSIZE, ttl=CACHE_TTL)
 def get_liquidity_positions(address):
-    client = get_qgl_client()
     request_string = (
         """
         query getLiquidityPositions($id: ID!) {
@@ -121,7 +129,7 @@ def get_liquidity_positions(address):
     # note The Graph doesn't seem to like it in checksum format
     address = address.lower()
     variable_values = {"id": address}
-    result = client.execute(query, variable_values=variable_values)
+    result = qgl_client_execute(query, variable_values=variable_values)
     user = result["user"] or {}
     result = user.get("liquidityPositions", [])
     return result
@@ -150,7 +158,6 @@ def get_staking_positions(address):
 
 def get_lp_transactions(address, pairs):
     """Retrieves mints/burns transactions of a given liquidity provider."""
-    client = get_qgl_client()
     gql_order_by = "orderBy: timestamp, orderDirection: desc"
     gql_transaction_parameters = "transaction { id timestamp blockNumber }"
     gql_pair_parameters = "pair { id }"
@@ -190,7 +197,7 @@ def get_lp_transactions(address, pairs):
     # note The Graph doesn't seem to like it in checksum format
     address = address.lower()
     variable_values = {"address": address, "pairs": pairs}
-    result = client.execute(query, variable_values=variable_values)
+    result = qgl_client_execute(query, variable_values=variable_values)
     return result
 
 
