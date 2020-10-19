@@ -1,6 +1,7 @@
 from unittest import mock
 
 from fastapi.testclient import TestClient
+from gql.transport.exceptions import TransportServerError
 from starlette import status
 
 from .utils import (
@@ -22,28 +23,22 @@ class TestMain:
 
     def setup_method(self):
         with mock.patch.dict("os.environ", {"WEB3_INFURA_PROJECT_ID": "1"}):
+            import libuniswaproi
             from main import app
         self.app = app
+        self.libuniswaproi = libuniswaproi
         self.client = TestClient(app)
 
     def teardown_method(self):
         self.clear_cache()
 
     def clear_cache(self):
-        from libuniswaproi import (
-            get_eth_price,
-            get_liquidity_positions,
-            get_pair_info,
-            get_staking_positions,
-            portfolio,
-        )
-
         functions = (
-            get_eth_price,
-            get_liquidity_positions,
-            get_pair_info,
-            get_staking_positions,
-            portfolio,
+            self.libuniswaproi.get_eth_price,
+            self.libuniswaproi.get_liquidity_positions,
+            self.libuniswaproi.get_pair_info,
+            self.libuniswaproi.get_staking_positions,
+            self.libuniswaproi.portfolio,
         )
         for function in functions:
             function.cache_clear()
@@ -105,9 +100,25 @@ class TestMain:
         assert response.status_code == status.HTTP_200_OK
 
     def test_portfolio_invalid_address(self):
-        """Invalid addresses are currently crashing the application."""
+        """Invalid addresses are handled as bad request errors."""
         path_params = {"address": "0xInvalidAdress"}
         url = self.app.url_path_for("portfolio", **path_params)
         response = self.client.get(url)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert response.json() == {"detail": "Invalid address 0xInvalidAdress"}
+
+    def test_portfolio_the_graph_bad_gateway(self):
+        """The Graph down is a known/caught exception."""
+        path_params = {"address": self.address}
+        url = self.app.url_path_for("portfolio", **path_params)
+        m_get_qgl_client = mock.Mock(
+            side_effect=self.libuniswaproi.TheGraphServiceDownException(
+                "502 Server Error"
+            )
+        )
+        with mock.patch("libuniswaproi.get_qgl_client", m_get_qgl_client):
+            response = self.client.get(url)
+        assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
+        assert response.json() == {
+            "detail": "The Graph (thegraph.com) is down. 502 Server Error"
+        }

@@ -20,6 +20,11 @@ def exception_contextmanger():
     except libuniswaproi.InvalidAddressException as e:
         details = "Invalid address " + e.args[0]
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=details)
+    except libuniswaproi.TheGraphServiceDownException as e:
+        details = "The Graph (thegraph.com) is down. " + e.args[0]
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=details
+        )
 
 
 @app.get("/")
