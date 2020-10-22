@@ -47,6 +47,7 @@ token1 {
 reserve0
 reserve1
 totalSupply
+reserveUSD
 token0Price
 token1Price
 volumeUSD
@@ -216,9 +217,9 @@ def extract_pair_info(pair, balance, eth_price):
         # this was populated via `get_staking_positions()`
         staking_contract_address = pair.get("staking_contract_address")
         total_supply = Decimal(pair["totalSupply"])
-        print("total_supply:", total_supply)
         share = 100 * (balance / total_supply)
-        print("share: {0:0.4f}".format(share))
+        reserve_usd = Decimal(pair["reserveUSD"])
+        pool_token_price = reserve_usd / total_supply
         for i in range(2):
             token = pair[f"token{i}"]
             token_symbol = token["symbol"]
@@ -235,13 +236,13 @@ def extract_pair_info(pair, balance, eth_price):
             )
         pair_symbol = "-".join([token["symbol"] for token in tokens])
         balance_usd = sum([token["balance_usd"] for token in tokens])
-        print("pair_symbol:", pair_symbol)
     pair_info = {
         "contract_address": contract_address,
         "staking_contract_address": staking_contract_address,
         "owner_balance": balance,
         "pair_symbol": pair_symbol,
         "total_supply": total_supply,
+        "token_price": pool_token_price,
         "share": share,
         "balance_usd": balance_usd,
         "tokens": tokens,

@@ -118,6 +118,7 @@ class TestLibUniswapRoi:
             "id",
             "reserve0",
             "reserve1",
+            "reserveUSD",
             "token0",
             "token0Price",
             "token1",
