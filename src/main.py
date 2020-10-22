@@ -4,9 +4,8 @@ from contextlib import contextmanager
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
+from pools import uniswap
 from starlette import status
-
-import libuniswaproi
 
 app = FastAPI()
 allow_origins = os.environ.get("ALLOW_ORIGINS", "[]")
@@ -17,10 +16,10 @@ app.add_middleware(CORSMiddleware, allow_origins=allow_origins)
 def exception_contextmanger():
     try:
         yield
-    except libuniswaproi.InvalidAddressException as e:
+    except uniswap.InvalidAddressException as e:
         details = "Invalid address " + e.args[0]
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=details)
-    except libuniswaproi.TheGraphServiceDownException as e:
+    except uniswap.TheGraphServiceDownException as e:
         details = "The Graph (thegraph.com) is down. " + e.args[0]
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=details
@@ -35,5 +34,5 @@ def index():
 @app.get("/portfolio/{address}")
 @exception_contextmanger()
 def portfolio(address: str):
-    data = libuniswaproi.portfolio(address)
+    data = uniswap.portfolio(address)
     return data

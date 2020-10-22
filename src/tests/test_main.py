@@ -1,9 +1,7 @@
 from unittest import mock
 
 from fastapi.testclient import TestClient
-from starlette import status
-
-from .utils import (
+from pools.test_utils import (
     GQL_ETH_PRICE_RESPONSE,
     GQL_LIQUIDITY_POSITIONS_RESPONSE,
     GQL_MINTS_BURNS_TX_RESPONSE,
@@ -12,6 +10,7 @@ from .utils import (
     patch_session_fetch_schema,
     patch_web3_contract,
 )
+from starlette import status
 
 
 class TestMain:
@@ -22,10 +21,11 @@ class TestMain:
 
     def setup_method(self):
         with mock.patch.dict("os.environ", {"WEB3_INFURA_PROJECT_ID": "1"}):
-            import libuniswaproi
+            from pools import uniswap
+
             from main import app
         self.app = app
-        self.libuniswaproi = libuniswaproi
+        self.uniswap = uniswap
         self.client = TestClient(app)
 
     def teardown_method(self):
@@ -33,11 +33,11 @@ class TestMain:
 
     def clear_cache(self):
         functions = (
-            self.libuniswaproi.get_eth_price,
-            self.libuniswaproi.get_liquidity_positions,
-            self.libuniswaproi.get_pair_info,
-            self.libuniswaproi.get_staking_positions,
-            self.libuniswaproi.portfolio,
+            self.uniswap.get_eth_price,
+            self.uniswap.get_liquidity_positions,
+            self.uniswap.get_pair_info,
+            self.uniswap.get_staking_positions,
+            self.uniswap.portfolio,
         )
         for function in functions:
             function.cache_clear()
@@ -111,11 +111,9 @@ class TestMain:
         path_params = {"address": self.address}
         url = self.app.url_path_for("portfolio", **path_params)
         m_get_gql_client = mock.Mock(
-            side_effect=self.libuniswaproi.TheGraphServiceDownException(
-                "502 Server Error"
-            )
+            side_effect=self.uniswap.TheGraphServiceDownException("502 Server Error")
         )
-        with mock.patch("libuniswaproi.get_gql_client", m_get_gql_client):
+        with mock.patch("pools.uniswap.get_gql_client", m_get_gql_client):
             response = self.client.get(url)
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
         assert response.json() == {
