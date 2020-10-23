@@ -7,6 +7,8 @@ from fastapi.responses import RedirectResponse
 from pools import uniswap
 from starlette import status
 
+from response_models import Portfolio
+
 app = FastAPI()
 allow_origins = os.environ.get("ALLOW_ORIGINS", "[]")
 app.add_middleware(CORSMiddleware, allow_origins=allow_origins)
@@ -31,7 +33,7 @@ def index():
     return RedirectResponse(app.redoc_url)
 
 
-@app.get("/portfolio/{address}")
+@app.get("/portfolio/{address}", response_model=Portfolio)
 @exception_contextmanger()
 def portfolio(address: str):
     data = uniswap.portfolio(address)
