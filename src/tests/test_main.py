@@ -54,7 +54,7 @@ class TestMain:
         response = self.client.get(url)
         assert response.status_code == status.HTTP_200_OK
         assert response.url == "http://testserver/redoc"
-        assert "FastAPI - ReDoc" in response.text
+        assert "Pools API" in response.text
 
     def test_portfolio(self):
         """Basic portfolio testing."""

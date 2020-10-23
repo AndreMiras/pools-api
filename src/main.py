@@ -9,7 +9,7 @@ from starlette import status
 
 from response_models import Portfolio
 
-app = FastAPI()
+app = FastAPI(title="Pools API", description="Liquidity Provider stats web API")
 allow_origins = os.environ.get("ALLOW_ORIGINS", "[]")
 app.add_middleware(CORSMiddleware, allow_origins=allow_origins)
 
