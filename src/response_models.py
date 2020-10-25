@@ -53,10 +53,10 @@ class Portfolio(BaseModel):
     pairs: List[Pair] = []
 
 
-class TokenDaily(BaseModel):
+class DatePrice(BaseModel):
     date: datetime
     price_usd: Decimal
 
 
-class TokensDaily(BaseModel):
-    __root__: List[TokenDaily] = []
+class DatePriceList(BaseModel):
+    __root__: List[DatePrice] = []
