@@ -17,8 +17,8 @@ class TransactionPair(BaseModel):
 
 
 class TransactionTransaction(BaseModel):
-    block_number: int
     id: str
+    block_number: int
     timestamp: datetime
 
 
@@ -51,3 +51,12 @@ class Portfolio(BaseModel):
     address: str
     balance_usd: Decimal
     pairs: List[Pair] = []
+
+
+class TokenDaily(BaseModel):
+    date: datetime
+    price_usd: Decimal
+
+
+class TokensDaily(BaseModel):
+    __root__: List[TokenDaily] = []

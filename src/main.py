@@ -7,7 +7,7 @@ from fastapi.responses import RedirectResponse
 from pools import uniswap
 from starlette import status
 
-from response_models import Portfolio
+from response_models import Portfolio, TokensDaily
 
 app = FastAPI(title="Pools API", description="Liquidity Provider stats web API")
 allow_origins = os.environ.get("ALLOW_ORIGINS", "[]")
@@ -36,5 +36,14 @@ def index():
 @app.get("/portfolio/{address}", response_model=Portfolio)
 @exception_contextmanger()
 def portfolio(address: str):
+    """Portfolio overview."""
     data = uniswap.portfolio(address)
+    return data
+
+
+@app.get("/tokens/{address}/daily", response_model=TokensDaily)
+@exception_contextmanger()
+def tokens_daily(address: str):
+    """Tokens daily."""
+    data = uniswap.get_token_daily(address)
     return data

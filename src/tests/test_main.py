@@ -6,6 +6,7 @@ from pools.test_utils import (
     GQL_LIQUIDITY_POSITIONS_RESPONSE,
     GQL_MINTS_BURNS_TX_RESPONSE,
     GQL_PAIR_INFO_RESPONSE,
+    GQL_TOKEN_DAY_DATA_RESPONSE,
     patch_client_execute,
     patch_session_fetch_schema,
     patch_web3_contract,
@@ -16,8 +17,10 @@ from starlette import status
 class TestMain:
 
     address = "0x000000000000000000000000000000000000dEaD"
+    contract_address = "0xA478c2975Ab1Ea89e8196811F51A7B7Ade33eB11"
     url_index = "/"
     url_portfolio = f"/portfolio/{address}"
+    url_tokens_daily = f"/tokens/{contract_address}/daily"
 
     def setup_method(self):
         with mock.patch.dict("os.environ", {"WEB3_INFURA_PROJECT_ID": "1"}):
@@ -47,6 +50,11 @@ class TestMain:
         assert self.app.url_path_for("index") == self.url_index
         path_params = {"address": self.address}
         assert self.app.url_path_for("portfolio", **path_params) == self.url_portfolio
+        path_params = {"address": self.contract_address}
+        assert (
+            self.app.url_path_for("tokens_daily", **path_params)
+            == self.url_tokens_daily
+        )
 
     def test_index(self):
         """Index should be redirecting to the documentation."""
@@ -119,3 +127,19 @@ class TestMain:
         assert response.json() == {
             "detail": "The Graph (thegraph.com) is down. 502 Server Error"
         }
+
+    def test_tokens_daily(self):
+        """Basic tokens daily testing."""
+        url = self.url_tokens_daily
+        m_execute = mock.Mock(side_effect=(GQL_TOKEN_DAY_DATA_RESPONSE,))
+        with patch_client_execute(m_execute), patch_session_fetch_schema():
+            response = self.client.get(url)
+        assert m_execute.call_count == 1
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json() == [
+            {"date": "2020-10-11T00:00:00", "price_usd": 0.0},
+            {"date": "2020-10-12T00:00:00", "price_usd": 0.0},
+            {"date": "2020-10-17T00:00:00", "price_usd": 32.32860336361386},
+            {"date": "2020-10-18T00:00:00", "price_usd": 0.0},
+            {"date": "2020-10-21T00:00:00", "price_usd": 0.0},
+        ]
