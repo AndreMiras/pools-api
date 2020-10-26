@@ -1,0 +1,4 @@
+fastapi
+pools
+sentry-sdk
+uvicorn

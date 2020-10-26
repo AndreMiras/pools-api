@@ -1,6 +1,8 @@
 VIRTUAL_ENV ?= venv
+REQUIREMENTS_BASE:=requirements/requirements-base.txt
+REQUIREMENTS_TEST:=requirements/requirements-test.txt
+REQUIREMENTS:=requirements.txt
 PIP=$(VIRTUAL_ENV)/bin/pip
-TOX=`which tox`
 PYTHON=$(VIRTUAL_ENV)/bin/python
 ISORT=$(VIRTUAL_ENV)/bin/isort
 FLAKE8=$(VIRTUAL_ENV)/bin/flake8
@@ -13,7 +15,7 @@ PYTHON_MINOR_VERSION=8
 PYTHON_VERSION=$(PYTHON_MAJOR_VERSION).$(PYTHON_MINOR_VERSION)
 PYTHON_MAJOR_MINOR=$(PYTHON_MAJOR_VERSION)$(PYTHON_MINOR_VERSION)
 PYTHON_WITH_VERSION=python$(PYTHON_VERSION)
-SOURCES=experiment.py main.py
+SOURCES=src/
 DOCKER_IMAGE=andremiras/uniswap-roi
 DOCKER_COMMAND ?= /bin/bash
 DOCKER_PORT=8000
@@ -21,41 +23,56 @@ DOCKER_PORT=8000
 
 $(VIRTUAL_ENV):
 	$(PYTHON_WITH_VERSION) -m venv $(VIRTUAL_ENV)
-	$(PIP) install -r requirements.txt
 
 virtualenv: $(VIRTUAL_ENV)
+	$(PIP) install -r $(REQUIREMENTS)
 
-test:
-	$(TOX)
+virtualenv-test: virtualenv
+	$(PIP) install -r $(REQUIREMENTS_TEST)
 
-lint/isort: virtualenv
+test: virtualenv-test
+	PYTHONPATH=src $(PYTEST) src/tests/
+
+lint/isort: virtualenv-test
 	$(ISORT) --check-only --diff $(SOURCES)
 
-lint/flake8: virtualenv
+lint/flake8: virtualenv-test
 	$(FLAKE8) $(SOURCES)
 
-lint/black: virtualenv
+lint/black: virtualenv-test
 	$(BLACK) --check $(SOURCES)
 
-format/isort: virtualenv
+format/isort: virtualenv-test
 	$(ISORT) $(SOURCES)
 
-format/black: virtualenv
+format/black: virtualenv-test
 	$(BLACK) --verbose $(SOURCES)
 
 lint: lint/isort lint/flake8 lint/black
 
 format: format/isort format/black
 
-clean: release/clean docs/clean
+clean:
 	find . -type d -name "__pycache__" -exec rm -r {} +
 	find . -type d -name "*.egg-info" -exec rm -r {} +
 
 clean/all: clean
-	rm -rf $(VIRTUAL_ENV) .tox/
+	rm -rf $(VIRTUAL_ENV)
+
+$(REQUIREMENTS): $(VIRTUAL_ENV)
+	$(PIP) install pip-tools
+	$(PIP)-compile \
+		--no-emit-index-url --no-emit-trusted-host --upgrade \
+		--output-file $(REQUIREMENTS) \
+		--build-isolation \
+		$(REQUIREMENTS_BASE)
+
+$(VENV_TEST): $(VENV_PROD) $(REQUIREMENTS_TEST) REVISION
+	@venv/bin/pip install --index-url $(PYPI) -r $(REQUIREMENTS_TEST)
+	@touch $@
 
 run/uvicorn: $(VIRTUAL_ENV)
-	$(UVICORN) main:app --reload
+	PYTHONPATH=src $(UVICORN) main:app --reload
 
 docker/build:
 	docker build --tag=$(DOCKER_IMAGE) .
