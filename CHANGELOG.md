@@ -1,7 +1,7 @@
 # Change Log
 
 
-## [Unreleased]
+## [20201026]
 
   - Configurable allow origins headers
   - Add unit tests
