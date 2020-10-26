@@ -10,7 +10,7 @@ attrs==20.2.0             # via aiohttp, jsonschema
 base58==2.0.1             # via multiaddr
 bitarray==1.2.2           # via eth-account
 cachetools==4.1.1         # via pools
-certifi==2020.6.20        # via requests
+certifi==2020.6.20        # via requests, sentry-sdk
 chardet==3.0.4            # via aiohttp, requests
 click==7.1.2              # via uvicorn
 cytoolz==0.11.0           # via eth-keyfile, eth-utils
@@ -42,10 +42,11 @@ pydantic==1.7             # via fastapi
 pyrsistent==0.17.3        # via jsonschema
 requests==2.24.0          # via gql, ipfshttpclient, web3
 rlp==2.0.0                # via eth-account, eth-rlp
+sentry-sdk==0.19.1        # via -r requirements/requirements-base.txt
 six==1.15.0               # via jsonschema, multiaddr, parsimonious, protobuf
 starlette==0.13.6         # via fastapi
 toolz==0.11.1             # via cytoolz
-urllib3==1.25.11          # via requests
+urllib3==1.25.11          # via requests, sentry-sdk
 uvicorn==0.12.2           # via -r requirements/requirements-base.txt
 varint==1.0.2             # via multiaddr
 web3==5.12.3              # via pools

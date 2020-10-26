@@ -1,15 +1,21 @@
 import os
 from contextlib import contextmanager
 
+import sentry_sdk
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from pools import uniswap
+from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from starlette import status
 
 from response_models import DatePriceList, Pairs, PairsDaily, Portfolio
 
 app = FastAPI(title="Pools API", description="Liquidity Provider stats web API")
+SENTRY_DSN = os.environ.get("SENTRY_DSN")
+if SENTRY_DSN:
+    sentry_sdk.init(dsn=SENTRY_DSN)
+    app.add_middleware(SentryAsgiMiddleware)
 allow_origins = os.environ.get("ALLOW_ORIGINS", "[]")
 app.add_middleware(CORSMiddleware, allow_origins=allow_origins)
 

@@ -9,6 +9,7 @@
   - Use the external pools package, refs #1
   - Setup CI, refs #2
   - Document response struct, refs #4
+  - Setup Sentry, refs #5
   - New tokens daily endpoint, refs #6
 
 
