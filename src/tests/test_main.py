@@ -7,6 +7,7 @@ from pools.test_utils import (
     GQL_MINTS_BURNS_TX_RESPONSE,
     GQL_PAIR_DAY_DATA_RESPONSE,
     GQL_PAIR_INFO_RESPONSE,
+    GQL_PAIRS_RESPONSE,
     GQL_TOKEN_DAY_DATA_RESPONSE,
     patch_client_execute,
     patch_session_fetch_schema,
@@ -26,6 +27,7 @@ class TestMain:
     url_portfolio = f"/portfolio/{address}"
     url_tokens_daily = f"/tokens/{token_address}/daily"
     url_pairs_daily = f"/pairs/{pair_address}/daily"
+    url_pairs = "/pairs"
 
     def setup_method(self):
         with mock.patch.dict("os.environ", {"WEB3_INFURA_PROJECT_ID": "1"}):
@@ -48,6 +50,7 @@ class TestMain:
             self.uniswap.portfolio,
             self.uniswap.get_token_daily_raw,
             self.uniswap.get_pair_daily_raw,
+            self.uniswap.get_pairs_raw,
         )
         for function in functions:
             function.cache_clear()
@@ -62,6 +65,11 @@ class TestMain:
             self.app.url_path_for("tokens_daily", **path_params)
             == self.url_tokens_daily
         )
+        path_params = {"address": self.pair_address}
+        assert (
+            self.app.url_path_for("pairs_daily", **path_params) == self.url_pairs_daily
+        )
+        assert self.app.url_path_for("pairs") == self.url_pairs
 
     def test_index(self):
         """Index should be redirecting to the documentation."""
@@ -176,3 +184,32 @@ class TestMain:
                 {"date": "2020-10-20T00:00:00", "price_usd": 45.415830439697224},
             ],
         }
+
+    def test_pairs(self):
+        """Basic pairs testing."""
+        url = self.url_pairs
+        m_execute = mock.Mock(side_effect=(GQL_PAIRS_RESPONSE,))
+        with patch_client_execute(m_execute), patch_session_fetch_schema():
+            response = self.client.get(url)
+        assert m_execute.call_count == 1
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json() == [
+            {
+                "id": "0xc5ddc3e9d103b9dfdf32ae7096f1392cf88696f9",
+                "price_usd": 170814795.26734078,
+                "symbol": "FCBTC-TWOB",
+                "total_supply": 6.764183030477267,
+            },
+            {
+                "id": "0xbb2b8038a1640196fbe3e38816f3e67cba72d940",
+                "price_usd": 500825813.2783621,
+                "symbol": "WBTC-WETH",
+                "total_supply": 1.3753597279111465,
+            },
+            {
+                "id": "0xb4e16d0168e52d35cacd2c6185b44281ec28c9dc",
+                "price_usd": 50242455.85402316,
+                "symbol": "USDC-WETH",
+                "total_supply": 12.621500317891401,
+            },
+        ]

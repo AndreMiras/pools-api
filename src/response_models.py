@@ -47,6 +47,17 @@ class Pair(BaseModel):
     transactions: List[Transaction] = []
 
 
+class PairsPair(BaseModel):
+    id: str
+    symbol: str
+    price_usd: Decimal
+    total_supply: Decimal
+
+
+class Pairs(BaseModel):
+    __root__: List[PairsPair] = []
+
+
 class Portfolio(BaseModel):
     address: str
     balance_usd: Decimal
