@@ -35,7 +35,7 @@ multiaddr==0.0.9          # via ipfshttpclient
 multidict==4.7.6          # via aiohttp, yarl
 netaddr==0.8.0            # via multiaddr
 parsimonious==0.8.1       # via eth-abi
-https://github.com/AndreMiras/libpools/archive/7907e7a.zip#egg=pools  # via -r requirements/requirements-base.txt
+https://github.com/AndreMiras/libpools/archive/4e056fd.zip#egg=pools  # via -r requirements/requirements-base.txt
 protobuf==3.13.0          # via web3
 pycryptodome==3.9.8       # via eth-hash, eth-keyfile
 pydantic==1.6.1           # via fastapi

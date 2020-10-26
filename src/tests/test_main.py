@@ -160,11 +160,19 @@ class TestMain:
             response = self.client.get(url)
         assert m_execute.call_count == 1
         assert response.status_code == status.HTTP_200_OK
-        assert response.json() == [
-            {"date": "2020-10-25T00:00:00", "price_usd": 47.75974727766944},
-            {"date": "2020-10-24T00:00:00", "price_usd": 48.01749402379172},
-            {"date": "2020-10-23T00:00:00", "price_usd": 47.88345730523966},
-            {"date": "2020-10-22T00:00:00", "price_usd": 48.16869701768363},
-            {"date": "2020-10-21T00:00:00", "price_usd": 46.88813260917142},
-            {"date": "2020-10-20T00:00:00", "price_usd": 45.415830439697224},
-        ]
+        assert response.json() == {
+            "pair": {
+                "price_usd": 47.63563936389576,
+                "reserve_usd": 415905325.9588991,
+                "symbol": "DAI-WETH",
+                "total_supply": 8730969.742669689,
+            },
+            "date_price": [
+                {"date": "2020-10-25T00:00:00", "price_usd": 47.75974727766944},
+                {"date": "2020-10-24T00:00:00", "price_usd": 48.01749402379172},
+                {"date": "2020-10-23T00:00:00", "price_usd": 47.88345730523966},
+                {"date": "2020-10-22T00:00:00", "price_usd": 48.16869701768363},
+                {"date": "2020-10-21T00:00:00", "price_usd": 46.88813260917142},
+                {"date": "2020-10-20T00:00:00", "price_usd": 45.415830439697224},
+            ],
+        }
