@@ -1,6 +1,11 @@
 # Change Log
 
 
+## [Unreleased]
+
+  - Expose market cap on the pairs endpoint
+
+
 ## [20201026]
 
   - Configurable allow origins headers

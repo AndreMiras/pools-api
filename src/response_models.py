@@ -52,6 +52,7 @@ class PairsPair(BaseModel):
     symbol: str
     price_usd: Decimal
     total_supply: Decimal
+    reserve_usd: Decimal
 
 
 class Pairs(BaseModel):

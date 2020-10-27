@@ -199,17 +199,20 @@ class TestMain:
                 "price_usd": 170814795.26734078,
                 "symbol": "FCBTC-TWOB",
                 "total_supply": 6.764183030477267,
+                "reserve_usd": 1155422539.501795,
             },
             {
                 "id": "0xbb2b8038a1640196fbe3e38816f3e67cba72d940",
                 "price_usd": 500825813.2783621,
                 "symbol": "WBTC-WETH",
                 "total_supply": 1.3753597279111465,
+                "reserve_usd": 688815654.2814068,
             },
             {
                 "id": "0xb4e16d0168e52d35cacd2c6185b44281ec28c9dc",
                 "price_usd": 50242455.85402316,
                 "symbol": "USDC-WETH",
                 "total_supply": 12.621500317891401,
+                "reserve_usd": 634135172.533198,
             },
         ]
