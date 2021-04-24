@@ -4,6 +4,7 @@
 ## [Unreleased]
 
   - Expose market cap on the pairs endpoint
+  - Migrate to Python 3.9
 
 
 ## [20201026]

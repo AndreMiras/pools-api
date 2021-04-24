@@ -1,6 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
-from typing import List, Optional
+from typing import Optional
 
 from pydantic import BaseModel
 
@@ -42,9 +42,9 @@ class Pair(BaseModel):
     share: Decimal
     staking_contract_address: Optional[str] = None
     price_usd: Decimal
-    tokens: List[Token] = []
+    tokens: list[Token] = []
     total_supply: Decimal
-    transactions: List[Transaction] = []
+    transactions: list[Transaction] = []
 
 
 class PairsPair(BaseModel):
@@ -56,13 +56,13 @@ class PairsPair(BaseModel):
 
 
 class Pairs(BaseModel):
-    __root__: List[PairsPair] = []
+    __root__: list[PairsPair] = []
 
 
 class Portfolio(BaseModel):
     address: str
     balance_usd: Decimal
-    pairs: List[Pair] = []
+    pairs: list[Pair] = []
 
 
 class DatePrice(BaseModel):
@@ -71,7 +71,7 @@ class DatePrice(BaseModel):
 
 
 class DatePriceList(BaseModel):
-    __root__: List[DatePrice] = []
+    __root__: list[DatePrice] = []
 
 
 class PairsDailyPair(BaseModel):

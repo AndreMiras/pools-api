@@ -5,7 +5,7 @@
 # docker run -it --rm --env PORT=8000 --publish 8000:8000 andremiras/uniswap-roi
 # Or for interactive shell:
 # docker run -it --rm andremiras/uniswap-roi bash
-FROM python:3.8-slim
+FROM python:3.9-slim
 
 WORKDIR /app
 

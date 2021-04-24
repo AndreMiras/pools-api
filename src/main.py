@@ -12,8 +12,7 @@ from starlette import status
 from response_models import DatePriceList, Pairs, PairsDaily, Portfolio
 
 app = FastAPI(title="Pools API", description="Liquidity Provider stats web API")
-SENTRY_DSN = os.environ.get("SENTRY_DSN")
-if SENTRY_DSN:
+if SENTRY_DSN := os.environ.get("SENTRY_DSN"):
     sentry_sdk.init(dsn=SENTRY_DSN)
     app.add_middleware(SentryAsgiMiddleware)
 allow_origins = os.environ.get("ALLOW_ORIGINS", "[]")
