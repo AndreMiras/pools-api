@@ -72,7 +72,7 @@ $(VENV_TEST): $(VENV_PROD) $(REQUIREMENTS_TEST) REVISION
 	@touch $@
 
 run/uvicorn: $(VIRTUAL_ENV)
-	PYTHONPATH=src $(UVICORN) main:app --reload
+	$(UVICORN) src.main:app --reload
 
 docker/build:
 	docker build --tag=$(DOCKER_IMAGE) .

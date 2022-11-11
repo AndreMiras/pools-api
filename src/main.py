@@ -9,7 +9,7 @@ from pools import uniswap
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from starlette import status
 
-from response_models import DatePriceList, Pairs, PairsDaily, Portfolio
+from src.response_models import DatePriceList, Pairs, PairsDaily, Portfolio
 
 app = FastAPI(title="Pools API", description="Liquidity Provider stats web API")
 if SENTRY_DSN := os.environ.get("SENTRY_DSN"):
