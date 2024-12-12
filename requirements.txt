@@ -27,7 +27,7 @@ gql==3.0.0a3              # via pools
 graphql-core==3.1.4       # via gql
 h11==0.12.0               # via uvicorn
 hexbytes==0.2.1           # via eth-account, eth-rlp, web3
-idna==2.10                # via requests, yarl
+idna==3.7                # via requests, yarl
 ipfshttpclient==0.7.0a1   # via web3
 jsonschema==3.2.0         # via web3
 lru-dict==1.1.7           # via web3
