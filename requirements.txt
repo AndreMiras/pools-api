@@ -44,7 +44,7 @@ requests==2.25.1          # via gql, ipfshttpclient, web3
 rlp==2.0.1                # via eth-account, eth-rlp
 sentry-sdk==1.0.0         # via -r requirements/requirements-base.txt
 six==1.15.0               # via jsonschema, multiaddr, parsimonious, protobuf
-starlette==0.13.6         # via fastapi
+starlette==0.40.0         # via fastapi
 toolz==0.11.1             # via cytoolz
 typing-extensions==3.7.4.3  # via pydantic
 urllib3==1.26.4           # via requests, sentry-sdk
