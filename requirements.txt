@@ -4,7 +4,7 @@
 #
 #    pip-compile --no-emit-index-url --no-emit-trusted-host --output-file=requirements.txt requirements/requirements-base.txt
 #
-aiohttp==3.6.2            # via gql
+aiohttp==3.10.11            # via gql
 async-timeout==3.0.1      # via aiohttp
 attrs==20.3.0             # via aiohttp, jsonschema
 base58==2.1.0             # via multiaddr
